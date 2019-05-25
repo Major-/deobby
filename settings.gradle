@@ -1,0 +1,6 @@
+rootProject.name = 'deobby'
+
+include 'transform'
+include 'asm'
+include 'cli'
+
