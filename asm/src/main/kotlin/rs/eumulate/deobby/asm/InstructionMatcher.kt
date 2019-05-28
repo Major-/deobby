@@ -36,7 +36,7 @@ class InstructionMatcher(list: InsnList) {
      */
     private fun instructionsToString(reverse: Boolean = false): String {
         val instructions = if (reverse) instructions.reversed() else instructions
-        return instructions.joinToString { InstructionPattern.opcodeToString(it.opcode) }
+        return instructions.joinToString(separator = "") { InstructionPattern.opcodeToString(it.opcode) }
     }
 
 }

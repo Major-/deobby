@@ -3,7 +3,6 @@ package rs.eumulate.deobby.asm
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.util.Printer
-import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -18,10 +17,41 @@ inline class InstructionPattern(val pattern: Pattern) {
     companion object {
 
         /**
+         * Converts a readable pattern which uses instruction mnemonics to the internal character-based format used
+         * when actually attempting to find matches.
+         */
+        fun compile(expression: String): InstructionPattern {
+            val regex = StringBuilder()
+            val name = StringBuilder()
+
+            for (character in expression) {
+                if (Character.isLetterOrDigit(character) || character == '_') {
+                    name.append(character)
+                } else {
+                    if (name.isNotEmpty()) {
+                        regex.append(instructionToString(name.toString()))
+                        name.clear()
+                    }
+
+                    if (!Character.isWhitespace(character)) {
+                        regex.append(character)
+                    }
+                }
+            }
+
+            if (name.isNotEmpty()) {
+                regex.append(instructionToString(name.toString()))
+            }
+
+            val pattern = Pattern.compile(regex.toString())
+            return InstructionPattern(pattern)
+        }
+
+        /**
          * Contains groups of instructions which are converted to the appropriate regular expression automatically.
          */
-        private val groups = HashMap<String, IntArray>().also {
-            it["insnnode"] = intArrayOf(
+        private val groups = mutableMapOf(
+            "insnnode" to intArrayOf(
                 NOP, ACONST_NULL,
                 ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5, LCONST_0, LCONST_1,
                 FCONST_0, FCONST_1, FCONST_2, DCONST_0, DCONST_1,
@@ -37,51 +67,47 @@ inline class InstructionPattern(val pattern: Pattern) {
                 IREM, LREM, FREM, DREM,
                 INEG, LNEG, FNEG, DNEG,
                 ISHL, LSHL, ISHR, LSHR, IUSHR, LUSHR,
-                IAND, LAND,
-                IOR, LOR,
-                IXOR, LXOR,
-                I2L, I2F, I2D,
-                L2I, L2F, L2D,
-                F2I, F2L, F2D,
-                D2I, D2L, D2F,
+                IAND, LAND, IOR, LOR, IXOR, LXOR,
+                I2L, I2F, I2D, L2I, L2F, L2D,
+                F2I, F2L, F2D, D2I, D2L, D2F,
                 I2B, I2C, I2S,
                 LCMP, FCMPL, FCMPG, DCMPL, DCMPG,
                 IRETURN, LRETURN, FRETURN, DRETURN, ARETURN, RETURN,
                 ARRAYLENGTH,
                 ATHROW,
                 MONITORENTER, MONITOREXIT
-            )
+            ),
 
-            it["intinsnnode"] = intArrayOf(BIPUSH, SIPUSH, NEWARRAY)
-            it["varinsnnode"] = intArrayOf(
+            "intinsnnode" to intArrayOf(BIPUSH, SIPUSH, NEWARRAY),
+            "varinsnnode" to intArrayOf(
                 ILOAD, LLOAD, FLOAD, DLOAD, ALOAD,
                 ISTORE, LSTORE, FSTORE, DSTORE, ASTORE,
                 RET
-            )
+            ),
 
-            it["typeinsnnode"] = intArrayOf(NEW, ANEWARRAY, CHECKCAST, INSTANCEOF)
-            it["fieldinsnnode"] = intArrayOf(GETSTATIC, PUTSTATIC, GETFIELD, PUTFIELD)
+            "typeinsnnode" to intArrayOf(NEW, ANEWARRAY, CHECKCAST, INSTANCEOF),
+            "fieldinsnnode" to intArrayOf(GETSTATIC, PUTSTATIC, GETFIELD, PUTFIELD),
 
-            it["methodinsnnode"] = intArrayOf(
+            "methodinsnnode" to intArrayOf(
                 INVOKEVIRTUAL, INVOKESPECIAL, INVOKESTATIC, INVOKEINTERFACE, INVOKEDYNAMIC
-            )
+            ),
 
-            it["jumpinsnnode"] = intArrayOf(
+            "jumpinsnnode" to intArrayOf(
                 IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE,
                 IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT, IF_ICMPGE, IF_ICMPGT, IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE,
                 GOTO, JSR,
                 IFNULL, IFNONNULL
-            )
+            ),
 
-            it["ldcinsnnode"] = intArrayOf(LDC)
-            it["iincinsnnode"] = intArrayOf(IINC)
-            it["tableswitchinsnnode"] = intArrayOf(TABLESWITCH)
-            it["lookupswitchinsnnode"] = intArrayOf(LOOKUPSWITCH)
-            it["multianewarrayinsnnode"] = intArrayOf(MULTIANEWARRAY)
+            "ldcinsnnode" to intArrayOf(LDC),
+            "iincinsnnode" to intArrayOf(IINC),
+            "tableswitchinsnnode" to intArrayOf(TABLESWITCH),
+            "lookupswitchinsnnode" to intArrayOf(LOOKUPSWITCH),
+            "multianewarrayinsnnode" to intArrayOf(MULTIANEWARRAY),
 
-            it["iconst"] = intArrayOf(ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5)
+            "iconst" to intArrayOf(ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5),
 
-            it["pushinstruction"] = intArrayOf(
+            "pushinstruction" to intArrayOf(
                 ACONST_NULL,
                 ALOAD, ILOAD, LLOAD, FLOAD, DLOAD,
                 BIPUSH, SIPUSH,
@@ -89,79 +115,45 @@ inline class InstructionPattern(val pattern: Pattern) {
                 DUP, DUP2,
                 GETSTATIC,
                 LCONST_0, LCONST_1, FCONST_0, FCONST_1, FCONST_2, DCONST_0, DCONST_1
-            )
+            ),
 
-            it["invokeinstruction"] = intArrayOf(
+            "invokeinstruction" to intArrayOf(
                 INVOKEDYNAMIC, INVOKEINTERFACE, INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL
-            )
+            ),
 
-            it["ifinstruction"] = intArrayOf(
+            "ifinstruction" to intArrayOf(
                 IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE,
                 IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT, IF_ICMPGE, IF_ICMPGT, IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE,
                 IFNULL, IFNONNULL
             )
-        }
+        )
+
+        private val opcodeMapping = Printer.OPCODES.withIndex()
+            .associateBy(IndexedValue<String>::value, IndexedValue<String>::index)
 
         /**
-         * Converts an instruction to character(s) used to build the regular expression.
-         * @param name The name of the instruction.
-         * @return The character(s) which represents this instruction.
+         * Converts an instruction to a string, used to build the regular expression.
          * @throws IllegalArgumentException If the instruction does not exist.
          */
         internal fun instructionToString(name: String): String {
-            for (index in 0 until Printer.OPCODES.size) {
-                if (name.equals(Printer.OPCODES[index], ignoreCase = true)) {
-                    return opcodeToString(index)
-                }
-            }
+            val uppercased = name.toUpperCase()
+            val lowercased = name.toLowerCase()
 
-            val group = groups[name.toLowerCase()]
-            if (group != null) {
-                return group.joinToString(separator = "|", prefix = "(", postfix = ")", transform = ::opcodeToString)
-            } else if (name.equals("AbstractInsnNode", ignoreCase = true)) {
-                return "."
+            return when {
+                uppercased in opcodeMapping -> opcodeToString(opcodeMapping.getValue(uppercased))
+                lowercased in groups -> groups.getValue(lowercased)
+                    .joinToString(separator = "|", prefix = "(", postfix = ")", transform = ::opcodeToString)
+                lowercased == "abstractinsnnode" -> "."
+                else -> throw IllegalArgumentException("$name is not a known instruction.")
             }
-
-            throw IllegalArgumentException("$name is not a known instruction.")
         }
 
         /**
-         * Converts an opcode to a string. This adds 0xE000 to the operation code so that the character is in the
-         * "Private Use Area".
+         * Converts an opcode to a string. This adds 0xE000 to the operation code so that the character(s) are in the
+         * Unicode Private Use Area.
          */
-        fun opcodeToString(opcode: Int): String {
+        internal fun opcodeToString(opcode: Int): String {
             return (0xE000 + opcode).toChar().toString()
-        }
-
-        /**
-         * Converts a readable pattern which uses instruction mnemonics to the internal character-based format used
-         * when actually attempting to find matches.
-         */
-        fun compile(expr: String): InstructionPattern {
-            val regex = StringBuilder()
-            var name = StringBuilder()
-
-            for (c in expr) {
-                if (Character.isLetterOrDigit(c) || c == '_') {
-                    name.append(c)
-                } else {
-                    if (name.isNotEmpty()) {
-                        regex.append(instructionToString(name.toString()))
-                        name = StringBuilder()
-                    }
-
-                    if (!Character.isWhitespace(c)) {
-                        regex.append(c)
-                    }
-                }
-            }
-
-            if (name.isNotEmpty()) {
-                regex.append(instructionToString(name.toString()))
-            }
-
-            val pattern = Pattern.compile(regex.toString())
-            return InstructionPattern(pattern)
         }
 
     }

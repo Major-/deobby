@@ -1,0 +1,237 @@
+package rs.emulate.deobby.transform.mask
+
+import jdk.internal.org.objectweb.asm.Opcodes.IAND
+import jdk.internal.org.objectweb.asm.Opcodes.LSHL
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.tree.*
+import rs.eumulate.deobby.asm.ldc.LongLdcInsnNode
+import rs.eumulate.deobby.asm.toPushInstruction
+import rs.eumulate.deobby.transform.mask.BitMaskMethodTransformer
+
+class BitMaskMethodTransformerTest {
+
+    private val transformer = BitMaskMethodTransformer()
+
+    @Test
+    fun `transformer doesn't match bitmasks without shifts`() {
+        val expected = arrayOf(0.toPushInstruction(), 1.toPushInstruction(), InsnNode(IAND))
+        val method = method { expected }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer doesn't match bitshifts without masks`() {
+        val expected = arrayOf(0.toPushInstruction(), 1.toPushInstruction(), InsnNode(LSHL))
+        val method = method { expected }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer ignores sufficiently small mask values`() {
+        val expected = expression(0.toPushInstruction(), "&", 1.toPushInstruction(), "<<", 1.toPushInstruction())
+        val method = method { expected }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer matches the AND mask operation`() {
+        val expected = expression(0.toPushInstruction(), "&", 0b1111.toPushInstruction(), "<<", 28.toPushInstruction())
+
+        val input = expression(0.toPushInstruction(), "&", 0b1111111.toPushInstruction(), "<<", 28.toPushInstruction())
+        val method = method { input }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer matches the OR mask operation`() {
+        val expected = expression(0.toPushInstruction(), "|", 0b1111.toPushInstruction(), "<<", 28.toPushInstruction())
+
+        val input = expression(0.toPushInstruction(), "|", 0b1111111.toPushInstruction(), "<<", 28.toPushInstruction())
+        val method = method { input }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer matches the XOR mask operation`() {
+        val expected = expression(0.toPushInstruction(), "^", 0b1111.toPushInstruction(), "<<", 28.toPushInstruction())
+
+        val input = expression(0.toPushInstruction(), "^", 0b1111111.toPushInstruction(), "<<", 28.toPushInstruction())
+        val method = method { input }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer removes unnecessary bits in left int shift`() {
+        val expected = expression(0.toPushInstruction(), "&", 0b1111.toPushInstruction(), "<<", 28.toPushInstruction())
+
+        val input = expression(0.toPushInstruction(), "&", 0b1111111.toPushInstruction(), "<<", 28.toPushInstruction())
+        val method = method { input }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer removes unnecessary bits in left long shift`() {
+        val expected = expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(0b1111), "<<", 60.toPushInstruction())
+
+        val input = expression(LongLdcInsnNode(0), "&", LdcInsnNode(Long.MAX_VALUE), "<<", 60.toPushInstruction())
+        val method = method { input }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer removes unnecessary bits in right int shift`() {
+        val expected = expression(0.toPushInstruction(), "&", 0b10000.toPushInstruction(), ">>", 4.toPushInstruction())
+
+        val input = expression(0.toPushInstruction(), "&", 0b11011.toPushInstruction(), ">>", 4.toPushInstruction())
+        val method = method { input }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer removes unnecessary bits in right long shift`() {
+        val expected = expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(0b1000), ">>", 3.toPushInstruction())
+
+        val input = expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(0b1011), ">>", 3.toPushInstruction())
+        val method = method { input }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer removes unnecessary bits in unsigned right int shift`() {
+        val expected = expression(0.toPushInstruction(), "&", 0b10000.toPushInstruction(), ">>>", 4.toPushInstruction())
+
+        val input = expression(0.toPushInstruction(), "&", 0b11011.toPushInstruction(), ">>>", 4.toPushInstruction())
+        val method = method { input }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer removes unnecessary bits in unsigned right long shift`() {
+        val expected = expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(1L shl 62), ">>>", 62.toPushInstruction())
+
+        val input = expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(Long.MAX_VALUE), ">>>", 62.toPushInstruction())
+        val method = method { input }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    @Test
+    fun `transformer rewrites multiple bitmasks in one method`() {
+        val expected = expression(0.toPushInstruction(), "&", 0b111.toPushInstruction(), "<<", 29.toPushInstruction()) +
+            expression(0.toPushInstruction(), "&", 0b1.toPushInstruction(), "<<", 31.toPushInstruction())
+
+        val input = expression(0.toPushInstruction(), "&", 0b1111.toPushInstruction(), "<<", 29.toPushInstruction()) +
+            expression(0.toPushInstruction(), "&", 0b11111111111111.toPushInstruction(), "<<", 31.toPushInstruction())
+        val method = method { input }
+
+        transformer.transform(method)
+
+        assertInstructionEquals(expected, method.instructions)
+    }
+
+    private companion object {
+
+        private fun assertInstructionEquals(expected: Array<AbstractInsnNode>, actual: InsnList) {
+            assertEquals(expected.size, actual.size()) { "Array size mismatch" }
+
+            for (index in expected.indices) {
+                val left = expected[index]
+                val right = actual[index]
+
+                assertEquals(left.opcode, right.opcode) { "Opcode mismatch (index=$index)" }
+
+                if (left is IntInsnNode) {
+                    assertEquals(left.operand, (right as? IntInsnNode)?.operand) { "IntInsnNode operand mismatch" }
+                } else if (left is LdcInsnNode) {
+                    assertEquals(left.cst, (right as? LdcInsnNode)?.cst) { "LdcInsnNode cst mismatch" }
+                }
+            }
+        }
+
+        /**
+         * Creates a bitmask expression.
+         *
+         * @param shift Must be [InsnNode], [IntInsnNode], or an [LdcInsnNode] with an [Int] value.
+         */
+        private fun expression(
+            value: AbstractInsnNode,
+            maskop: String,
+            mask: AbstractInsnNode,
+            shiftop: String,
+            shift: AbstractInsnNode
+        ): Array<AbstractInsnNode> {
+            require(!shift.isLongValue()) { "Amount to shift by cannot be a long." }
+            require(value.isLongValue() == mask.isLongValue()) {
+                "Cannot mix value and mask types - either both must be longs, or neither."
+            }
+
+            val maskOp = when (maskop) {
+                "&" -> if (value.isLongValue() && mask.isLongValue()) Opcodes.LAND else Opcodes.IAND
+                "|" -> if (value.isLongValue() && mask.isLongValue()) Opcodes.LOR else Opcodes.IOR
+                "^" -> if (value.isLongValue() && mask.isLongValue()) Opcodes.LXOR else Opcodes.IXOR
+                else -> error("Unrecognised mask operation $maskop")
+            }
+
+            val shiftOp = when (shiftop) {
+                "<<" -> if (value.isLongValue() && mask.isLongValue()) Opcodes.LSHL else Opcodes.ISHL
+                ">>" -> if (value.isLongValue() && mask.isLongValue()) Opcodes.LSHR else Opcodes.ISHR
+                ">>>" -> if (value.isLongValue() && mask.isLongValue()) Opcodes.LUSHR else Opcodes.IUSHR
+                else -> error("Unrecognised shift operation $shiftop")
+            }
+
+            return arrayOf(value, mask, InsnNode(maskOp), shift, InsnNode(shiftOp))
+        }
+
+        private fun AbstractInsnNode.isLongValue(): Boolean {
+            return this is LdcInsnNode && this.cst is Long
+        }
+
+        private fun method(nodes: () -> Array<AbstractInsnNode>): MethodNode {
+            val methodName = nodes.javaClass.simpleName.substringBefore("$")
+            return MethodNode().apply {
+                name = "test function: `$methodName`"
+                signature = "()V"
+                instructions = InsnList().apply { nodes().forEach(::add) }
+            }
+        }
+
+    }
+
+}
