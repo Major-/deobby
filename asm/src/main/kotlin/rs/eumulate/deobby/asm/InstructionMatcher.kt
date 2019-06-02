@@ -10,10 +10,23 @@ class InstructionMatcher(list: InsnList) {
     private val instructionText by lazy { instructionsToString() }
     private val instructionTextReverse by lazy { instructionsToString(reverse = true) }
 
+    fun match(pattern: InstructionPattern, reverse: Boolean = false): List<InstructionPatternMatch> {
+        val matches = mutableListOf<InstructionPatternMatch>()
+
+        val input = if (reverse) instructionTextReverse else instructionText
+        val matcher = pattern.matcher(input)
+
+        while (matcher.find()) {
+            matches += instructions.slice(matcher.start() until matcher.end())
+        }
+
+        return matches
+    }
+
     fun match(
         pattern: InstructionPattern,
         reverse: Boolean = false,
-        constraint: (InstructionPatternMatch) -> Boolean = { true }
+        constraint: (InstructionPatternMatch) -> Boolean
     ): List<InstructionPatternMatch> {
         val matches = mutableListOf<InstructionPatternMatch>()
 
