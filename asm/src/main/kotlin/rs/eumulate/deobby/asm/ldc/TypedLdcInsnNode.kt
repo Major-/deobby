@@ -16,3 +16,15 @@ inline fun DoubleLdcInsnNode(value: Double) = LdcInsnNode(value)
 inline fun StringLdcInsnNode(value: String) = LdcInsnNode(value)
 
 inline fun TypeLdcInsnNode(value: Type) = LdcInsnNode(value)
+
+fun LdcInsnNode.isInt(): Boolean = cst is Int
+
+fun LdcInsnNode.isFloat(): Boolean = cst is Float
+
+fun LdcInsnNode.isLong(): Boolean = cst is Long
+
+fun LdcInsnNode.isDouble(): Boolean = cst is Double
+
+fun LdcInsnNode.isString(): Boolean = cst is String
+
+fun LdcInsnNode.isType(): Boolean = cst is Type

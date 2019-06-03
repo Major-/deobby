@@ -17,7 +17,7 @@ import rs.eumulate.deobby.transform.PureMethodTransformer
  * Operations may be simplified when the number of bits in the mask is greater than the amount of bits remaining after
  * the shift has been applied.
  */
-class BitMaskMethodTransformer : PureMethodTransformer {
+class VerboseBitMaskMethodTransformer : PureMethodTransformer {
 
     override fun transform(item: MethodNode) {
         val matcher = InstructionMatcher(item.instructions)

@@ -10,12 +10,13 @@ import org.objectweb.asm.tree.IntInsnNode
 import org.objectweb.asm.tree.LdcInsnNode
 import rs.emulate.deobby.transform.PureMethodTransformerTest
 import rs.eumulate.deobby.asm.ldc.LongLdcInsnNode
+import rs.eumulate.deobby.asm.ldc.isLong
 import rs.eumulate.deobby.asm.toPushInstruction
-import rs.eumulate.deobby.transform.mask.BitMaskMethodTransformer
+import rs.eumulate.deobby.transform.mask.VerboseBitMaskMethodTransformer
 
-class BitMaskMethodTransformerTest : PureMethodTransformerTest() {
+class VerboseBitMaskMethodTransformerTest : PureMethodTransformerTest() {
 
-    override val transformer = BitMaskMethodTransformer()
+    override val transformer = VerboseBitMaskMethodTransformer()
 
     @Test
     fun `transformer doesn't match bitmasks without shifts`() {
@@ -162,7 +163,7 @@ class BitMaskMethodTransformerTest : PureMethodTransformerTest() {
         }
 
         private fun AbstractInsnNode.isLongValue(): Boolean {
-            return this is LdcInsnNode && this.cst is Long
+            return this is LdcInsnNode && this.isLong()
         }
 
     }
