@@ -15,16 +15,6 @@ abstract class PureMethodTransformerTest {
         assertInstructionEquals(expected, node.instructions)
     }
 
-    private fun createMethodNode(nodes: () -> Array<AbstractInsnNode>): MethodNode {
-        val methodName = nodes.javaClass.simpleName.substringBefore("$")
-
-        return MethodNode().apply {
-            name = "test function: `$methodName`"
-            signature = "()V"
-            instructions = InsnList().apply { nodes().forEach(::add) }
-        }
-    }
-
     protected fun assertInstructionEquals(expected: Array<AbstractInsnNode>, actual: InsnList) {
         assertEquals(expected.size, actual.size()) { "Array size mismatch" }
 
@@ -65,6 +55,16 @@ abstract class PureMethodTransformerTest {
         }
 
         values.forEach { assertEquals(first.it(), casted.it()) }
+    }
+
+    private fun createMethodNode(nodes: () -> Array<AbstractInsnNode>): MethodNode {
+        val methodName = nodes.javaClass.simpleName.substringBefore("$")
+
+        return MethodNode().apply {
+            name = "test function: `$methodName`"
+            signature = "()V"
+            instructions = InsnList().apply { nodes().forEach(::add) }
+        }
     }
 
 }
