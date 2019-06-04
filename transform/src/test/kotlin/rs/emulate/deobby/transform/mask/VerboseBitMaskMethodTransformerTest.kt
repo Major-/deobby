@@ -118,10 +118,10 @@ class VerboseBitMaskMethodTransformerTest : PureMethodTransformerTest() {
     @Test
     fun `transformer rewrites multiple bitmasks in one method`() {
         val expected = expression(0.toPushInstruction(), "&", 0b111.toPushInstruction(), "<<", 29.toPushInstruction()) +
-            expression(0.toPushInstruction(), "&", 0b1.toPushInstruction(), "<<", 31.toPushInstruction())
+            expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(1L shl 62), ">>>", 62.toPushInstruction())
 
         val input = expression(0.toPushInstruction(), "&", 0b1111.toPushInstruction(), "<<", 29.toPushInstruction()) +
-            expression(0.toPushInstruction(), "&", 0b11111111111111.toPushInstruction(), "<<", 31.toPushInstruction())
+            expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(Long.MAX_VALUE), ">>>", 62.toPushInstruction())
 
         assertInstructionEquals(expected) { input }
     }
