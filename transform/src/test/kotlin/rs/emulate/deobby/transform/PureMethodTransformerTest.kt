@@ -62,7 +62,7 @@ abstract class PureMethodTransformerTest {
 
         return MethodNode().apply {
             name = "test function: `$methodName`"
-            signature = "()V"
+            desc = "()V"
             instructions = InsnList().apply { nodes().forEach(::add) }
         }
     }
