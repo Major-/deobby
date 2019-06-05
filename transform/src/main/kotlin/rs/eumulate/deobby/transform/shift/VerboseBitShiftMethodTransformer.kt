@@ -17,27 +17,26 @@ class VerboseBitShiftMethodTransformer : PureMethodTransformer {
         val matcher = InstructionMatcher(item.instructions)
         val matches = matcher.match(BIT_SHIFT_PATTERN)
 
-        var verbose = 0
+        var simplified = 0
 
         for (match in matches) {
             val (push, shift) = match
             val bits = push.getNumericPushValue()
 
-            val max = (if (shift.opcode in LONG_SHIFT_OPCODES) Long.SIZE_BITS else Int.SIZE_BITS) - 1
-
-            if (bits in 0..max) {
+            val max = if (shift.opcode in LONG_SHIFT_OPCODES) Long.SIZE_BITS else Int.SIZE_BITS
+            if (bits in 0 until max) {
                 continue
             }
 
-            verbose++
-            val constrained = bits.toInt() and max
-
+            val constrained = bits.toInt() and (max - 1)
             item.instructions[push] = constrained.toPushInstruction()
+
+            simplified++
             logger.debug { "Simplifying shift from $bits to $constrained in ${context.className}.${item.printableName}" }
         }
 
-        if (verbose > 0) {
-            logger.info { "Simplified $verbose bitshifts in ${context.className}.${item.printableName}" }
+        if (simplified > 0) {
+            logger.info { "Simplified $simplified bitshifts in ${context.className}.${item.printableName}" }
         }
     }
 
