@@ -1,7 +1,9 @@
 package rs.eumulate.deobby.transform
 
-interface Transformer<T> {
+interface Transformer<T, C : TransformerContext> {
 
-    fun transform(item: T)
+    fun transform(item: T, context: C)
 
 }
+
+interface TransformerContext

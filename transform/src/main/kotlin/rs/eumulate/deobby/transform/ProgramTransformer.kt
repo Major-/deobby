@@ -1,7 +1,11 @@
 package rs.eumulate.deobby.transform
 
-interface ProgramTransformer : Transformer<Program> {
+import java.nio.file.Path
 
-    override fun transform(item: Program)
+interface ProgramTransformer : Transformer<Program, ProgramContext> {
+
+    override fun transform(item: Program, context: ProgramContext)
 
 }
+
+data class ProgramContext(val path: Path) : TransformerContext

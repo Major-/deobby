@@ -2,6 +2,7 @@ package rs.emulate.deobby.transform
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.objectweb.asm.tree.*
+import rs.eumulate.deobby.transform.MethodContext
 import rs.eumulate.deobby.transform.PureMethodTransformer
 
 abstract class PureMethodTransformerTest {
@@ -10,7 +11,9 @@ abstract class PureMethodTransformerTest {
 
     protected fun assertInstructionEquals(expected: Array<AbstractInsnNode>, input: () -> Array<AbstractInsnNode>) {
         val node = createMethodNode(input)
-        transformer.transform(node)
+        val context = MethodContext(javaClass.name)
+
+        transformer.transform(node, context)
 
         assertInstructionEquals(expected, node.instructions)
     }

@@ -5,20 +5,18 @@ import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.util.CheckClassAdapter
 import java.io.BufferedInputStream
-import java.nio.file.FileSystems
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardOpenOption
+import java.nio.file.*
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 import java.util.stream.Collectors
 
 class Program private constructor(
-    val classes: MutableSet<ClassNode>
+    val classes: MutableSet<ClassNode>,
+    val context: ProgramContext
 ) {
 
-    constructor(classes: Collection<ClassNode>) : this(classes.toMutableSet())
+    constructor(classes: Collection<ClassNode>, context: ProgramContext) : this(classes.toMutableSet(), context)
 
     fun writeJar(path: Path) {
         JarOutputStream(Files.newOutputStream(path, StandardOpenOption.CREATE)).use { out ->
@@ -46,7 +44,7 @@ class Program private constructor(
                 else -> throw IllegalArgumentException("Unrecognised file type `$path`.")
             }
 
-            return Program(classes)
+            return Program(classes, ProgramContext(path))
         }
 
         private fun readClass(path: Path): Set<ClassNode> {

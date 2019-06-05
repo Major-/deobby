@@ -8,11 +8,12 @@ import rs.eumulate.deobby.asm.InstructionPattern
 import rs.eumulate.deobby.asm.getNumericPushValue
 import rs.eumulate.deobby.asm.toPushInstruction
 import rs.eumulate.deobby.asm.tree.printableName
+import rs.eumulate.deobby.transform.MethodContext
 import rs.eumulate.deobby.transform.PureMethodTransformer
 
 class VerboseBitShiftMethodTransformer : PureMethodTransformer {
 
-    override fun transform(item: MethodNode) {
+    override fun transform(item: MethodNode, context: MethodContext) {
         val matcher = InstructionMatcher(item.instructions)
         val matches = matcher.match(BIT_SHIFT_PATTERN)
 
@@ -32,11 +33,11 @@ class VerboseBitShiftMethodTransformer : PureMethodTransformer {
             val constrained = bits.toInt() and max
 
             item.instructions[push] = constrained.toPushInstruction()
-            logger.debug { "Simplifying shift from $bits to $constrained in ${item.printableName}" }
+            logger.debug { "Simplifying shift from $bits to $constrained in ${context.className}.${item.printableName}" }
         }
 
         if (verbose > 0) {
-            logger.info { "Simplified $verbose bitshifts in ${item.printableName}" }
+            logger.info { "Simplified $verbose bitshifts in ${context.className}.${item.printableName}" }
         }
     }
 

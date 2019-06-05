@@ -12,15 +12,17 @@ class TransformerSet( // TODO need more control over the transformer order than 
     private val methodTransformers: List<PureMethodTransformer> = emptyList()
 ) : ProgramTransformer {
 
-    override fun transform(item: Program) {
-        programTransformers.forEach { it.transform(item) }
+    override fun transform(item: Program, context: ProgramContext) {
+        programTransformers.forEach { it.transform(item, context) }
 
         for (clazz in item.classes) {
-            classTransformers.forEach { it.transform(clazz) }
+            classTransformers.forEach { it.transform(clazz, ClassContext) }
+
+            val methodContext = MethodContext(clazz.name)
 
             for (method in clazz.methods) {
                 if (!method.isNative() && !method.isAbstract())
-                    methodTransformers.forEach { it.transform(method) }
+                    methodTransformers.forEach { it.transform(method, methodContext) }
             }
         }
     }

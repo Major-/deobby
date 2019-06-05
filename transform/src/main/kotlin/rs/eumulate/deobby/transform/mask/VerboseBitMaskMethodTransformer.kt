@@ -9,6 +9,7 @@ import rs.eumulate.deobby.asm.getNumericPushValue
 import rs.eumulate.deobby.asm.ldc.LongLdcInsnNode
 import rs.eumulate.deobby.asm.toPushInstruction
 import rs.eumulate.deobby.asm.tree.printableName
+import rs.eumulate.deobby.transform.MethodContext
 import rs.eumulate.deobby.transform.PureMethodTransformer
 
 /**
@@ -20,7 +21,7 @@ import rs.eumulate.deobby.transform.PureMethodTransformer
  */
 class VerboseBitMaskMethodTransformer : PureMethodTransformer {
 
-    override fun transform(item: MethodNode) {
+    override fun transform(item: MethodNode, context: MethodContext) {
         val matcher = InstructionMatcher(item.instructions)
         val matches = matcher.match(BIT_MASK_SHIFT_PATTERN)
 
@@ -37,7 +38,7 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer {
                     mask shl bits ushr bits
                 }
 
-                logger.debug { "Simplifying long shift of $mask to $simpleMask in ${item.printableName}" }
+                logger.debug { "Simplifying long shift of $mask to $simpleMask in ${context.className}/${item.printableName}" }
                 LongLdcInsnNode(simpleMask) // Must use a LDC with a Long regardless of the mask value if long shift
             } else {
                 val truncated = mask.toInt()
@@ -47,13 +48,13 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer {
                     truncated shl bits ushr bits
                 }
 
-                logger.debug { "Simplifying int shift of $truncated to $simpleMask in ${item.printableName}" }
+                logger.debug { "Simplifying int shift of $truncated to $simpleMask in ${context.className}.${item.printableName}" }
                 simpleMask.toPushInstruction()
             }
         }
 
         if (matches.isNotEmpty()) {
-            logger.info { "Simplified ${matches.size} bitmasks in ${item.printableName}" }
+            logger.info { "Simplified ${matches.size} bitmasks in ${context.className}.${item.printableName}" }
         }
     }
 
