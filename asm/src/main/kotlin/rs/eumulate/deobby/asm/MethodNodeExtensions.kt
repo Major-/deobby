@@ -34,3 +34,7 @@ fun MethodNode.isAbstract(): Boolean {
 fun MethodNode.isNative(): Boolean {
     return access and Opcodes.ACC_NATIVE != 0
 }
+
+fun MethodNode.hasBytecode(): Boolean {
+    return access and (Opcodes.ACC_ABSTRACT or Opcodes.ACC_NATIVE) == 0
+}

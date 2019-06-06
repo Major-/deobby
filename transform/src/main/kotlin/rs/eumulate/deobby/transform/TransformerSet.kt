@@ -1,7 +1,6 @@
 package rs.eumulate.deobby.transform
 
-import rs.eumulate.deobby.asm.isAbstract
-import rs.eumulate.deobby.asm.isNative
+import rs.eumulate.deobby.asm.hasBytecode
 
 /**
  * A collection of [Transformer]s applied in order.
@@ -21,8 +20,9 @@ class TransformerSet( // TODO need more control over the transformer order than 
             val methodContext = MethodContext(clazz.name)
 
             for (method in clazz.methods) {
-                if (!method.isNative() && !method.isAbstract())
+                if (method.hasBytecode()) {
                     methodTransformers.forEach { it.transform(method, methodContext) }
+                }
             }
         }
     }
