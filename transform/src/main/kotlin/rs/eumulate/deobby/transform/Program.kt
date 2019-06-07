@@ -4,6 +4,7 @@ import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.util.CheckClassAdapter
+import rs.eumulate.deobby.asm.SupertypeAwareClassWriter
 import java.io.BufferedInputStream
 import java.nio.file.*
 import java.util.jar.JarEntry
@@ -19,9 +20,11 @@ class Program private constructor(
     constructor(classes: Collection<ClassNode>, context: ProgramContext) : this(classes.toMutableSet(), context)
 
     fun writeJar(path: Path) {
+        val supertypes = classes.associateBy(ClassNode::name, ClassNode::superName)
+
         JarOutputStream(Files.newOutputStream(path, StandardOpenOption.CREATE)).use { out ->
             for (clazz in classes) {
-                val writer = ClassWriter(0)
+                val writer = SupertypeAwareClassWriter(ClassWriter.COMPUTE_MAXS, supertypes)
 
                 clazz.accept(CheckClassAdapter(writer, true))
 
