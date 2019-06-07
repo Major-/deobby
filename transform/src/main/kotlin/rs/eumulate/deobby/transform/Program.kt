@@ -13,11 +13,11 @@ import java.util.jar.JarOutputStream
 import java.util.stream.Collectors
 
 class Program private constructor(
-    val classes: MutableSet<ClassNode>,
+    val classes: MutableList<ClassNode>,
     val context: ProgramContext
 ) {
 
-    constructor(classes: Collection<ClassNode>, context: ProgramContext) : this(classes.toMutableSet(), context)
+    constructor(classes: Collection<ClassNode>, context: ProgramContext) : this(classes.toMutableList(), context)
 
     fun writeJar(path: Path) {
         val supertypes = classes.associateBy(ClassNode::name, ClassNode::superName)
@@ -54,16 +54,16 @@ class Program private constructor(
             return Program(classes, ProgramContext(path))
         }
 
-        private fun readClass(path: Path): Set<ClassNode> {
+        private fun readClass(path: Path): List<ClassNode> {
             val input = BufferedInputStream(Files.newInputStream(path))
             val node = ClassNode().also {
                 ClassReader(input).accept(it, CLASS_PARSING_OPTIONS)
             }
 
-            return setOf(node)
+            return listOf(node)
         }
 
-        private fun readZip(path: Path): Set<ClassNode> {
+        private fun readZip(path: Path): List<ClassNode> { // TODO need to copy any other files too
             return JarFile(path.toFile()).use { file ->
                 file.stream()
                     .filter { it.name.endsWith(".class") }
@@ -74,7 +74,8 @@ class Program private constructor(
                             }
                         }
                     }
-                    .collect(Collectors.toSet())
+                    .collect(Collectors.toList())
+                    .sortedBy(ClassNode::name)
             }
         }
 
