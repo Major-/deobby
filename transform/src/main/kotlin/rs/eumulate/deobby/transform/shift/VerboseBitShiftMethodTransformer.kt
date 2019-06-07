@@ -11,7 +11,7 @@ import rs.eumulate.deobby.asm.tree.printableName
 import rs.eumulate.deobby.transform.MethodContext
 import rs.eumulate.deobby.transform.PureMethodTransformer
 
-class VerboseBitShiftMethodTransformer : PureMethodTransformer {
+class VerboseBitShiftMethodTransformer : PureMethodTransformer() {
 
     override fun transform(item: MethodNode, context: MethodContext) {
         val matcher = InstructionMatcher(item.instructions)

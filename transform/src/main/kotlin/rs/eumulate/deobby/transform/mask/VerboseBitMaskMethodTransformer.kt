@@ -19,7 +19,7 @@ import rs.eumulate.deobby.transform.PureMethodTransformer
  * Operations may be compacted when the number of bits in the mask operand is greater than the amount of bits remaining
  * after the shift has been applied.
  */
-class VerboseBitMaskMethodTransformer : PureMethodTransformer {
+class VerboseBitMaskMethodTransformer : PureMethodTransformer() {
 
     override fun transform(item: MethodNode, context: MethodContext) {
         val matcher = InstructionMatcher(item.instructions)
@@ -39,6 +39,7 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer {
                 }
 
                 logger.debug { "Simplifying long shift of $mask to $simpleMask in ${context.className}/${item.printableName}" }
+
                 LongLdcInsnNode(simpleMask) // Must use a LDC with a Long regardless of the mask value if long shift
             } else {
                 val truncated = mask.toInt()
@@ -49,6 +50,7 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer {
                 }
 
                 logger.debug { "Simplifying int shift of $truncated to $simpleMask in ${context.className}.${item.printableName}" }
+                
                 simpleMask.toPushInstruction()
             }
         }

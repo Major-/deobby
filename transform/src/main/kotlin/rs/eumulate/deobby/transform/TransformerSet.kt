@@ -8,11 +8,13 @@ import rs.eumulate.deobby.asm.hasBytecode
 class TransformerSet( // TODO need more control over the transformer order than this
     private val programTransformers: List<ProgramTransformer> = emptyList(),
     private val classTransformers: List<PureClassTransformer> = emptyList(),
-    private val methodTransformers: List<PureMethodTransformer> = emptyList()
+    private val methodTransformers: List<MethodTransformer> = emptyList()
 ) : ProgramTransformer {
 
     override fun transform(item: Program, context: ProgramContext) {
         programTransformers.forEach { it.transform(item, context) }
+
+        methodTransformers.forEach { it.initialise(item) }
 
         for (clazz in item.classes) {
             classTransformers.forEach { it.transform(clazz, ClassContext) }
@@ -25,6 +27,8 @@ class TransformerSet( // TODO need more control over the transformer order than 
                 }
             }
         }
+
+        methodTransformers.forEach { it.finish(item) }
     }
 
 }
