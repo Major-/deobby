@@ -26,7 +26,11 @@ class Program private constructor(
             for (clazz in classes) {
                 val writer = SupertypeAwareClassWriter(ClassWriter.COMPUTE_MAXS, supertypes)
 
-                clazz.accept(CheckClassAdapter(writer, true))
+                try {
+                    clazz.accept(CheckClassAdapter(writer, true))
+                } catch (e: Exception) {
+                    throw Exception("Error writing ${clazz.name}.class", e)
+                }
 
                 out.putNextEntry(JarEntry("${clazz.name}.class"))
                 out.write(writer.toByteArray())
