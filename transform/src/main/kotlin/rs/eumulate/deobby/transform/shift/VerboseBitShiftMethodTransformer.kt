@@ -5,8 +5,8 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.MethodNode
 import rs.eumulate.deobby.asm.InstructionMatcher
 import rs.eumulate.deobby.asm.InstructionPattern
-import rs.eumulate.deobby.asm.getNumericPushValue
 import rs.eumulate.deobby.asm.toPushInstruction
+import rs.eumulate.deobby.asm.tree.getNumericPushValue
 import rs.eumulate.deobby.asm.tree.printableName
 import rs.eumulate.deobby.transform.MethodContext
 import rs.eumulate.deobby.transform.PureMethodTransformer

@@ -42,34 +42,3 @@ fun Long.toPushInstruction(): AbstractInsnNode {
         else -> LdcInsnNode(this)
     }
 }
-
-/**
- * Gets the value of a numeric push instruction (which can be an `ICONST_*`, `BIPUSH`, `SIPUSH`, or `LDC_*`
- * instruction.
- */
-fun AbstractInsnNode.getNumericPushValue(): Long {
-    return when (this) {
-        is InsnNode -> when (getOpcode()) {
-            ICONST_M1 -> -1
-            ICONST_0 -> 0
-            ICONST_1 -> 1
-            ICONST_2 -> 2
-            ICONST_3 -> 3
-            ICONST_4 -> 4
-            ICONST_5 -> 5
-            else -> throw IllegalArgumentException("Cannot derive a numeric push value from ${javaClass.name}")
-        }
-        is IntInsnNode -> operand.toLong()
-        is LdcInsnNode -> (cst as Number).toLong()
-        else -> throw IllegalArgumentException("Cannot derive a numeric push value from ${javaClass.name}")
-    }
-}
-
-fun AbstractInsnNode.nextInsnNode(): AbstractInsnNode? {
-    var node = next
-    while (node != null && node.opcode == -1) {
-        node = node.next
-    }
-
-    return node
-}
