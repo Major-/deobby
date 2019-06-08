@@ -3,14 +3,14 @@ package rs.eumulate.deobby.transform
 import org.objectweb.asm.tree.MethodNode
 
 /**
- * A [Transformer] that manipulates [MethodNode]s and may cause program-wide side-effects.
+ * A [Transformer] that manipulates [MethodNode]s and may have [Program]-wide side-effects.
  */
 interface MethodTransformer : Transformer<MethodNode, MethodContext> {
 
     /**
      * Initialise this [MethodTransformer] using information from the specified [Program].
      *
-     * This function **must not** mutate the [Program].
+     * This function may be executed in parallel and thus **must not** mutate the [Program].
      */
     fun initialise(program: Program)
 
