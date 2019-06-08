@@ -1,20 +1,15 @@
 package rs.eumulate.deobby.asm
 
-import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.InsnList
 
 class InstructionMatcher(list: InsnList) {
 
-    private val instructions: List<AbstractInsnNode> = list.toArray().filter { it.opcode != -1 }
+    private val instructions = list.toArray().filter { it.opcode != -1 }
+    private val instructionText = instructionsToString()
 
-    private val instructionText by lazy { instructionsToString() }
-    private val instructionTextReverse by lazy { instructionsToString(reverse = true) }
-
-    fun match(pattern: InstructionPattern, reverse: Boolean = false): List<InstructionPatternMatch> {
+    fun match(pattern: InstructionPattern): List<InstructionPatternMatch> {
         val matches = mutableListOf<InstructionPatternMatch>()
-
-        val input = if (reverse) instructionTextReverse else instructionText
-        val matcher = pattern.matcher(input)
+        val matcher = pattern.matcher(instructionText)
 
         while (matcher.find()) {
             matches += instructions.slice(matcher.start() until matcher.end())
@@ -25,13 +20,10 @@ class InstructionMatcher(list: InsnList) {
 
     fun match(
         pattern: InstructionPattern,
-        reverse: Boolean = false,
         constraint: (InstructionPatternMatch) -> Boolean
     ): List<InstructionPatternMatch> {
         val matches = mutableListOf<InstructionPatternMatch>()
-
-        val input = if (reverse) instructionTextReverse else instructionText
-        val matcher = pattern.matcher(input)
+        val matcher = pattern.matcher(instructionText)
 
         while (matcher.find()) {
             val match = instructions.slice(matcher.start() until matcher.end())
@@ -47,8 +39,7 @@ class InstructionMatcher(list: InsnList) {
     /**
      * Converts the instruction list to the internal character format.
      */
-    private fun instructionsToString(reverse: Boolean = false): String {
-        val instructions = if (reverse) instructions.reversed() else instructions
+    private fun instructionsToString(): String {
         return instructions.joinToString(separator = "") { InstructionPattern.opcodeToString(it.opcode) }
     }
 
