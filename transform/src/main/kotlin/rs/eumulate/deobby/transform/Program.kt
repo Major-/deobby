@@ -6,7 +6,11 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.util.CheckClassAdapter
 import rs.eumulate.deobby.asm.SupertypeAwareClassWriter
 import java.io.BufferedInputStream
-import java.nio.file.*
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption.CREATE
+import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
@@ -22,7 +26,7 @@ class Program private constructor(
     fun writeJar(path: Path) {
         val supertypes = classes.associateBy(ClassNode::name, ClassNode::superName)
 
-        JarOutputStream(Files.newOutputStream(path, StandardOpenOption.CREATE)).use { out ->
+        JarOutputStream(Files.newOutputStream(path, CREATE, TRUNCATE_EXISTING)).use { out ->
             for (clazz in classes) {
                 val writer = SupertypeAwareClassWriter(ClassWriter.COMPUTE_MAXS, supertypes)
 
