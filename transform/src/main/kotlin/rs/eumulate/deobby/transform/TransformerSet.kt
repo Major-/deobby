@@ -1,6 +1,6 @@
 package rs.eumulate.deobby.transform
 
-import rs.eumulate.deobby.asm.hasBytecode
+import rs.eumulate.deobby.asm.tree.hasBytecode
 
 /**
  * A collection of [Transformer]s applied in order.
