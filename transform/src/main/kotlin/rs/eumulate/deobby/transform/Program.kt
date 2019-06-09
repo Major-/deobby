@@ -17,12 +17,9 @@ import java.util.jar.JarOutputStream
 import java.util.stream.Collectors
 import java.util.zip.ZipEntry
 
-class Program private constructor(
-    val classes: MutableList<ClassNode>,
-    val context: ProgramContext
-) {
+class Program(classes: List<ClassNode>, val context: ProgramContext) {
 
-    constructor(classes: Collection<ClassNode>, context: ProgramContext) : this(classes.toMutableList(), context)
+    private val classes = classes.toMutableList()
 
     fun write(path: Path) {
         val supertypes = classes.associateBy(ClassNode::name, ClassNode::superName)
@@ -32,19 +29,18 @@ class Program private constructor(
             val outputPath = path.resolveSibling("${clazz.name}.deob.class")
 
             Files.newOutputStream(outputPath, CREATE, TRUNCATE_EXISTING).use { out ->
-                val bytes = clazz.getBytes(supertypes)
+                val bytes = clazz.encode(supertypes)
                 out.write(bytes)
             }
         } else {
             JarOutputStream(Files.newOutputStream(path, CREATE, TRUNCATE_EXISTING)).use { out ->
                 for (clazz in classes) {
                     out.putNextEntry(JarEntry("${clazz.name}.class"))
-                    val bytes = clazz.getBytes(supertypes)
-                    out.write(bytes)
+                    out.write(clazz.encode(supertypes))
                 }
 
                 if (ZIP_MATCHER.matches(context.path)) {
-                    JarFile(context.path.toFile(), false).use { file ->
+                    JarFile(context.path.toFile(), /* verify = */ false).use { file ->
                         file.stream()
                             .filter { !it.name.endsWith(".class") }
                             .forEach { copyZipEntry(it, file, out) }
@@ -54,7 +50,7 @@ class Program private constructor(
         }
     }
 
-    private fun ClassNode.getBytes(supertypes: Map<String, String>): ByteArray {
+    private fun ClassNode.encode(supertypes: Map<String, String>): ByteArray {
         val writer = SupertypeAwareClassWriter(ClassWriter.COMPUTE_MAXS, supertypes)
 
         try {
@@ -72,7 +68,7 @@ class Program private constructor(
         } else {
             jar.getInputStream(entry).use { input ->
                 out.putNextEntry(JarEntry(entry.name))
-                input.copyTo(out, minOf(entry.size.toInt(), 100 * 1024))
+                input.copyTo(out, minOf(entry.size.toInt(), 500 * 1024))
             }
         }
     }
@@ -94,16 +90,19 @@ class Program private constructor(
         }
 
         private fun readClass(path: Path): List<ClassNode> {
-            val input = BufferedInputStream(Files.newInputStream(path))
-            val node = ClassNode().also {
-                ClassReader(input).accept(it, CLASS_PARSING_OPTIONS)
-            }
+            val size = minOf(Files.size(path).toInt(), 500 * 1024)
 
-            return listOf(node)
+            BufferedInputStream(Files.newInputStream(path), size).use { input ->
+                val node = ClassNode().also {
+                    ClassReader(input).accept(it, CLASS_PARSING_OPTIONS)
+                }
+
+                return listOf(node)
+            }
         }
 
         private fun readZip(path: Path): List<ClassNode> {
-            return JarFile(path.toFile()).use { file ->
+            return JarFile(path.toFile(), /* verify = */ false).use { file ->
                 file.stream()
                     .filter { it.name.endsWith(".class") }
                     .map { entry ->
