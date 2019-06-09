@@ -15,6 +15,7 @@ import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 import java.util.stream.Collectors
+import java.util.zip.ZipEntry
 
 class Program private constructor(
     val classes: MutableList<ClassNode>,
@@ -23,21 +24,55 @@ class Program private constructor(
 
     constructor(classes: Collection<ClassNode>, context: ProgramContext) : this(classes.toMutableList(), context)
 
-    fun writeJar(path: Path) {
+    fun write(path: Path) {
         val supertypes = classes.associateBy(ClassNode::name, ClassNode::superName)
 
-        JarOutputStream(Files.newOutputStream(path, CREATE, TRUNCATE_EXISTING)).use { out ->
-            for (clazz in classes) {
-                val writer = SupertypeAwareClassWriter(ClassWriter.COMPUTE_MAXS, supertypes)
+        if (classes.size == 1) {
+            val clazz = classes.first()
+            val outputPath = path.resolveSibling("${clazz.name}.deob.class")
 
-                try {
-                    clazz.accept(CheckClassAdapter(writer, true))
-                } catch (e: Exception) {
-                    throw Exception("Error writing ${clazz.name}.class", e)
+            Files.newOutputStream(outputPath, CREATE, TRUNCATE_EXISTING).use { out ->
+                val bytes = clazz.getBytes(supertypes)
+                out.write(bytes)
+            }
+        } else {
+            JarOutputStream(Files.newOutputStream(path, CREATE, TRUNCATE_EXISTING)).use { out ->
+                for (clazz in classes) {
+                    out.putNextEntry(JarEntry("${clazz.name}.class"))
+                    val bytes = clazz.getBytes(supertypes)
+                    out.write(bytes)
                 }
 
-                out.putNextEntry(JarEntry("${clazz.name}.class"))
-                out.write(writer.toByteArray())
+                if (ZIP_MATCHER.matches(context.path)) {
+                    JarFile(context.path.toFile(), false).use { file ->
+                        file.stream()
+                            .filter { !it.name.endsWith(".class") }
+                            .forEach { copyZipEntry(it, file, out) }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun ClassNode.getBytes(supertypes: Map<String, String>): ByteArray {
+        val writer = SupertypeAwareClassWriter(ClassWriter.COMPUTE_MAXS, supertypes)
+
+        try {
+            accept(CheckClassAdapter(writer, true))
+        } catch (e: Exception) {
+            throw Exception("Error encoding $name.class", e)
+        }
+
+        return writer.toByteArray()
+    }
+
+    private fun copyZipEntry(entry: ZipEntry, jar: JarFile, out: JarOutputStream) {
+        if (entry.isDirectory) {
+            out.putNextEntry(JarEntry(entry.name))
+        } else {
+            jar.getInputStream(entry).use { input ->
+                out.putNextEntry(JarEntry(entry.name))
+                input.copyTo(out, minOf(entry.size.toInt(), 100 * 1024))
             }
         }
     }
@@ -67,7 +102,7 @@ class Program private constructor(
             return listOf(node)
         }
 
-        private fun readZip(path: Path): List<ClassNode> { // TODO need to copy any other files too
+        private fun readZip(path: Path): List<ClassNode> {
             return JarFile(path.toFile()).use { file ->
                 file.stream()
                     .filter { it.name.endsWith(".class") }
