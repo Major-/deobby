@@ -1,4 +1,4 @@
-package rs.eumulate.deobby.asm
+package rs.eumulate.deobby.asm.match
 
 import org.objectweb.asm.tree.InsnList
 

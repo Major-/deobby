@@ -1,10 +1,10 @@
-package rs.eumulate.deobby.asm
+package rs.eumulate.deobby.asm.match
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import rs.eumulate.deobby.asm.InstructionPattern.Companion.compile
-import rs.eumulate.deobby.asm.InstructionPattern.Companion.instructionToString
+import rs.eumulate.deobby.asm.match.InstructionPattern.Companion.compile
+import rs.eumulate.deobby.asm.match.InstructionPattern.Companion.instructionToString
 
 class InstructionPatternTest {
 

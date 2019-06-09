@@ -1,4 +1,4 @@
-package rs.eumulate.deobby.asm
+package rs.eumulate.deobby.asm.match
 
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -128,8 +128,7 @@ inline class InstructionPattern(val pattern: Pattern) {
             )
         )
 
-        private val opcodeMapping = Printer.OPCODES.withIndex()
-            .associateBy(IndexedValue<String>::value, IndexedValue<String>::index)
+        private val opcodeMapping = Printer.OPCODES.withIndex().associateBy({ it.value }) { it.index }
 
         /**
          * Converts an instruction to a string, used to build the regular expression.
@@ -141,8 +140,12 @@ inline class InstructionPattern(val pattern: Pattern) {
 
             return when {
                 uppercased in opcodeMapping -> opcodeToString(opcodeMapping.getValue(uppercased))
-                lowercased in groups -> groups.getValue(lowercased)
-                    .joinToString(separator = "|", prefix = "(", postfix = ")", transform = ::opcodeToString)
+                lowercased in groups -> groups[lowercased]!!.joinToString(
+                    separator = "|",
+                    prefix = "(",
+                    postfix = ")",
+                    transform = ::opcodeToString
+                )
                 lowercased == "abstractinsnnode" -> "."
                 else -> throw IllegalArgumentException("$name is not a known instruction.")
             }

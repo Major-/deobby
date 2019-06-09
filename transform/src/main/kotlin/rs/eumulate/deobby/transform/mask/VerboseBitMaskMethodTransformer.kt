@@ -3,9 +3,9 @@ package rs.eumulate.deobby.transform.mask
 import mu.KotlinLogging
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.MethodNode
-import rs.eumulate.deobby.asm.InstructionMatcher
-import rs.eumulate.deobby.asm.InstructionPattern
 import rs.eumulate.deobby.asm.ldc.LongLdcInsnNode
+import rs.eumulate.deobby.asm.match.InstructionMatcher
+import rs.eumulate.deobby.asm.match.InstructionPattern
 import rs.eumulate.deobby.asm.toPushInstruction
 import rs.eumulate.deobby.asm.tree.getNumericPushValue
 import rs.eumulate.deobby.asm.tree.printableName
