@@ -1,12 +1,11 @@
+@file:Suppress("EXPERIMENTAL_FEATURE_WARNING")
+
 package rs.eumulate.deobby.asm.match
 
 import org.objectweb.asm.Opcodes.*
-import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.util.Printer
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-
-typealias InstructionPatternMatch = List<AbstractInsnNode>
 
 inline class InstructionPattern(val pattern: Pattern) {
 

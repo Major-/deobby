@@ -1,5 +1,6 @@
 package rs.eumulate.deobby.asm.match
 
+import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.InsnList
 
 class InstructionMatcher(list: InsnList) {
@@ -7,8 +8,8 @@ class InstructionMatcher(list: InsnList) {
     private val instructions = list.toArray().filter { it.opcode != -1 }
     private val instructionText = instructionsToString()
 
-    fun match(pattern: InstructionPattern): List<InstructionPatternMatch> {
-        val matches = mutableListOf<InstructionPatternMatch>()
+    fun match(pattern: InstructionPattern): List<InstructionMatch> {
+        val matches = mutableListOf<InstructionMatch>()
         val matcher = pattern.matcher(instructionText)
 
         while (matcher.find()) {
@@ -18,11 +19,8 @@ class InstructionMatcher(list: InsnList) {
         return matches
     }
 
-    fun match(
-        pattern: InstructionPattern,
-        constraint: (InstructionPatternMatch) -> Boolean
-    ): List<InstructionPatternMatch> {
-        val matches = mutableListOf<InstructionPatternMatch>()
+    fun match(pattern: InstructionPattern, constraint: InstructionMatchConstraint): List<InstructionMatch> {
+        val matches = mutableListOf<InstructionMatch>()
         val matcher = pattern.matcher(instructionText)
 
         while (matcher.find()) {
@@ -44,3 +42,13 @@ class InstructionMatcher(list: InsnList) {
     }
 
 }
+
+/**
+ * An individual match of an [InstructionPattern] produced by an [InstructionMatcher].
+ */
+typealias InstructionMatch = List<AbstractInsnNode>
+
+/**
+ * A constraint to filter [InstructionMatch]es.
+ */
+typealias InstructionMatchConstraint = (InstructionMatch) -> Boolean
