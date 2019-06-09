@@ -21,7 +21,7 @@ class VerboseBitShiftMethodTransformerTest : PureMethodTransformerTest() {
         val expected = expression(0.toPushInstruction(), 31.toPushInstruction(), "<<")
         val input = expected.copyOf()
 
-        assertInstructionEquals(expected) { input }
+        assertInstructionEquals(expected, input)
     }
 
     @Test
@@ -29,7 +29,7 @@ class VerboseBitShiftMethodTransformerTest : PureMethodTransformerTest() {
         val expected = expression(LongLdcInsnNode(0), 63.toPushInstruction(), "<<")
         val input = expected.copyOf()
 
-        assertInstructionEquals(expected) { input }
+        assertInstructionEquals(expected, input)
     }
 
     @Test
@@ -37,7 +37,7 @@ class VerboseBitShiftMethodTransformerTest : PureMethodTransformerTest() {
         val expected = expression(0.toPushInstruction(), 0.toPushInstruction(), "<<")
         val input = expression(0.toPushInstruction(), 32.toPushInstruction(), "<<")
 
-        assertInstructionEquals(expected) { input }
+        assertInstructionEquals(expected, input)
     }
 
     @Test
@@ -45,7 +45,7 @@ class VerboseBitShiftMethodTransformerTest : PureMethodTransformerTest() {
         val expected = expression(LongLdcInsnNode(0), 1.toPushInstruction(), "<<")
         val input = expression(LongLdcInsnNode(0), 65.toPushInstruction(), "<<")
 
-        assertInstructionEquals(expected) { input }
+        assertInstructionEquals(expected, input)
     }
 
     @Test
@@ -53,7 +53,7 @@ class VerboseBitShiftMethodTransformerTest : PureMethodTransformerTest() {
         val expected = expression(0.toPushInstruction(), 1.toPushInstruction(), ">>")
         val input = expression(0.toPushInstruction(), 33.toPushInstruction(), ">>")
 
-        assertInstructionEquals(expected) { input }
+        assertInstructionEquals(expected, input)
     }
 
     @Test
@@ -61,7 +61,7 @@ class VerboseBitShiftMethodTransformerTest : PureMethodTransformerTest() {
         val expected = expression(LongLdcInsnNode(0), 1.toPushInstruction(), ">>")
         val input = expression(LongLdcInsnNode(0), 65.toPushInstruction(), ">>")
 
-        assertInstructionEquals(expected) { input }
+        assertInstructionEquals(expected, input)
     }
 
     @Test
@@ -69,7 +69,7 @@ class VerboseBitShiftMethodTransformerTest : PureMethodTransformerTest() {
         val expected = expression(0.toPushInstruction(), 1.toPushInstruction(), ">>>")
         val input = expression(0.toPushInstruction(), 33.toPushInstruction(), ">>>")
 
-        assertInstructionEquals(expected) { input }
+        assertInstructionEquals(expected, input)
     }
 
     @Test
@@ -77,7 +77,7 @@ class VerboseBitShiftMethodTransformerTest : PureMethodTransformerTest() {
         val expected = expression(LongLdcInsnNode(0), 1.toPushInstruction(), ">>>")
         val input = expression(LongLdcInsnNode(0), 65.toPushInstruction(), ">>>")
 
-        assertInstructionEquals(expected) { input }
+        assertInstructionEquals(expected, input)
     }
 
     @Test
@@ -88,7 +88,7 @@ class VerboseBitShiftMethodTransformerTest : PureMethodTransformerTest() {
         val input = expression(0.toPushInstruction(), 37.toPushInstruction(), "<<") +
             expression(LongLdcInsnNode(0), 69.toPushInstruction(), "<<")
 
-        assertInstructionEquals(expected) { input }
+        assertInstructionEquals(expected, input)
     }
 
     private companion object {
