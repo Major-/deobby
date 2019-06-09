@@ -11,6 +11,16 @@ import rs.eumulate.deobby.asm.tree.printableName
 import rs.eumulate.deobby.transform.MethodContext
 import rs.eumulate.deobby.transform.PureMethodTransformer
 
+/**
+ * A [PureMethodTransformer] that compacts bitshift operands by removing superfluous bits.
+ *
+ * The Java Language Specification require JVMs utilise only the lower 5 bits for an integer shift (6 bits for a long
+ * shift), although the given operand may be any 32-bit value. This transformer strips the upper 27 (or 26) bits.
+ *
+ * ```
+ * assertEquals(2 << 0b00000001, 2 << 0b1111111101000001)
+ * ```
+ */
 class VerboseBitShiftMethodTransformer : PureMethodTransformer() {
 
     override fun transform(item: MethodNode, context: MethodContext) {
