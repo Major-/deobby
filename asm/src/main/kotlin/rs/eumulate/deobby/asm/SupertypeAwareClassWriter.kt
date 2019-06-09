@@ -26,7 +26,7 @@ class SupertypeAwareClassWriter(
         return classes.put(key, value)
     }
 
-    override fun getCommonSuperClass(type1: String, type2: String): String {
+    public override fun getCommonSuperClass(type1: String, type2: String): String {
         if (type1 !in this && type2 !in this) {
             return super.getCommonSuperClass(type1, type2)
         }
@@ -40,7 +40,7 @@ class SupertypeAwareClassWriter(
     private fun ClassLoader.canLoadClass(value: String): Boolean {
         // TODO can this be done better?
         return try {
-            loadClass(value)
+            loadClass(value.replace('/', '.'))
             true
         } catch (e: ClassNotFoundException) {
             false
