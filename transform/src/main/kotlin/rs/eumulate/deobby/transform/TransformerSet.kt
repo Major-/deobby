@@ -7,7 +7,7 @@ import rs.eumulate.deobby.asm.tree.hasBytecode
  */
 class TransformerSet( // TODO need more control over the transformer order than this
     private val programTransformers: List<ProgramTransformer> = emptyList(),
-    private val classTransformers: List<PureClassTransformer> = emptyList(),
+    private val classTransformers: List<ClassTransformer> = emptyList(),
     private val methodTransformers: List<MethodTransformer> = emptyList()
 ) : ProgramTransformer {
 
@@ -16,7 +16,7 @@ class TransformerSet( // TODO need more control over the transformer order than 
 
         methodTransformers.forEach { it.initialise(item) }
 
-        for (clazz in item.classes) {
+        for (clazz in item.classes()) {
             classTransformers.forEach { it.transform(clazz, ClassContext) }
 
             val methodContext = MethodContext(clazz.name)

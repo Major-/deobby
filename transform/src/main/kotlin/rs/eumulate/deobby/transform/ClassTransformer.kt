@@ -12,7 +12,9 @@ interface ClassTransformer : Transformer<ClassNode, ClassContext> {
      *
      * This function may be executed in parallel and thus **must not** mutate the [Program].
      */
-    fun initialise(program: Program)
+    fun initialise(program: Program) {
+        /* standard do-nothing implementation */
+    }
 
     /**
      * Perform clean-up after this [ClassTransformer] has been executed on all classes, e.g. to remove fields that are
@@ -20,7 +22,9 @@ interface ClassTransformer : Transformer<ClassNode, ClassContext> {
      *
      * This function **may** mutate the [Program].
      */
-    fun finish(program: Program)
+    fun finish(program: Program) {
+        /* standard do-nothing implementation */
+    }
 
 }
 
@@ -30,11 +34,11 @@ interface ClassTransformer : Transformer<ClassNode, ClassContext> {
 abstract class PureClassTransformer : ClassTransformer {
 
     final override fun initialise(program: Program) {
-        /* do nothing */
+        
     }
 
     final override fun finish(program: Program) {
-        /* do nothing */
+
     }
 
 }

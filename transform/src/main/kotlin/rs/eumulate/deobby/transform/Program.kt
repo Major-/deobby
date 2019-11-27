@@ -19,14 +19,64 @@ import java.util.zip.ZipEntry
 
 class Program(classes: List<ClassNode>, val context: ProgramContext) {
 
-    private val classes = classes.toMutableList()
+    private val classes = classes.associateByTo(mutableMapOf(), ClassNode::name)
 
+    fun classes(): Collection<ClassNode> {
+        return classes.values
+    }
+
+    /**
+     * Adds the specified [ClassNode] to this [Program].
+     *
+     * @throws IllegalArgumentException If this [Program] already contains a class with the same internal name.
+     */
+    fun add(clazz: ClassNode) {
+        require(clazz.name !in classes) { "ClassNode named ${clazz.name} already exists." }
+        classes[clazz.name] = clazz
+    }
+
+    /**
+     * Removes the specified [ClassNode] from this [Program].
+     *
+     * This function should only be called _after_ removing all references to the [ClassNode] from other nodes.
+     */
+    fun replace(old: ClassNode, new: ClassNode) {
+        remove(old)
+        plusAssign(new)
+    }
+
+    /**
+     * Removes the specified [ClassNode] from this [Program].
+     *
+     * This function should only be called _after_ removing all references to the [ClassNode] from other nodes.
+     */
+    fun remove(clazz: ClassNode): Boolean {
+        return classes.remove(clazz.name) != null
+    }
+
+    operator fun contains(name: String): Boolean {
+        return name in classes
+    }
+
+    operator fun get(name: String): ClassNode {
+        return requireNotNull(classes[name]) { "Unrecognised class name `$name`." }
+    }
+
+    operator fun plusAssign(clazz: ClassNode): Unit = add(clazz)
+
+    /**
+     * Writes the contents of this [Program] to the specified [Path].
+     */
     fun write(path: Path) {
-        val supertypes = classes.associateBy(ClassNode::name, ClassNode::superName)
+        val supertypes = classes.values.associateBy(ClassNode::name, ClassNode::superName)
 
         if (classes.size == 1) {
-            val clazz = classes.first()
-            val outputPath = path.resolveSibling("${clazz.name}.deob.class")
+            val clazz = classes.values.first()
+            val outputPath = if (Files.exists(path) && !path.toString().endsWith(".deob.class")) {
+                path.resolveSibling("${clazz.name}.deob.class")
+            } else {
+                path
+            }
 
             Files.newOutputStream(outputPath, CREATE, TRUNCATE_EXISTING).use { out ->
                 val bytes = clazz.encode(supertypes)
@@ -34,8 +84,8 @@ class Program(classes: List<ClassNode>, val context: ProgramContext) {
             }
         } else {
             JarOutputStream(Files.newOutputStream(path, CREATE, TRUNCATE_EXISTING)).use { out ->
-                for (clazz in classes) {
-                    out.putNextEntry(JarEntry("${clazz.name}.class"))
+                for ((name, clazz) in classes) {
+                    out.putNextEntry(JarEntry("${name}.class"))
                     out.write(clazz.encode(supertypes))
                 }
 
@@ -51,12 +101,14 @@ class Program(classes: List<ClassNode>, val context: ProgramContext) {
     }
 
     private fun ClassNode.encode(supertypes: Map<String, String>): ByteArray {
-        val writer = SupertypeAwareClassWriter(ClassWriter.COMPUTE_MAXS, supertypes)
+        val writer = SupertypeAwareClassWriter(ClassWriter.COMPUTE_FRAMES, supertypes)
+        // TODO need to replace JSR/RET instructions that Java < 1.5 can produce for try/finally,
+        // but are not legal in 1.6+
 
         try {
             accept(CheckClassAdapter(writer, true))
         } catch (e: Exception) {
-            throw Exception("Error encoding $name.class", e)
+            throw Exception("Error encoding $name.class in ${context.path}", e)
         }
 
         return writer.toByteArray()
@@ -104,7 +156,7 @@ class Program(classes: List<ClassNode>, val context: ProgramContext) {
         private fun readZip(path: Path): List<ClassNode> {
             return JarFile(path.toFile(), /* verify = */ false).use { file ->
                 file.stream()
-                    .filter { it.name.endsWith(".class") }
+                    .filter { it.name.endsWith(".class") } // TODO filter by 0xCAFEBABE header not file name?
                     .map { entry ->
                         file.getInputStream(entry).use { input ->
                             ClassNode().also {
