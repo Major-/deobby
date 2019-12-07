@@ -2,6 +2,7 @@ package rs.eumulate.deobby.transform
 
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.commons.JSRInlinerAdapter
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.util.CheckClassAdapter
 import rs.eumulate.deobby.asm.SupertypeAwareClassWriter
@@ -20,6 +21,22 @@ import java.util.zip.ZipEntry
 class Program(classes: List<ClassNode>, val context: ProgramContext) {
 
     private val classes = classes.associateByTo(mutableMapOf(), ClassNode::name)
+
+    init {
+        // Before letting the user do anything with this program, replace any jsr/ret instructions that ASM won't handle
+        // (only produced by very old java compilers).
+        for (`class` in classes) {
+            for ((index, method) in `class`.methods.withIndex()) {
+                val exceptions = method.exceptions.toTypedArray()
+                val signature = method.signature
+
+                val adapter = JSRInlinerAdapter(method, method.access, method.name, method.desc, signature, exceptions)
+                method.accept(adapter)
+
+                `class`.methods[index] = adapter
+            }
+        }
+    }
 
     fun classes(): Collection<ClassNode> {
         return classes.values
