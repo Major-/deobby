@@ -10,10 +10,22 @@ import org.objectweb.asm.tree.FieldNode
 data class FieldReference(val owner: String, val name: String, val desc: String)
 
 /**
+ * The pair of values that identify a field in a class.
+ */
+data class FieldId(val name: String, val desc: String)
+
+/**
  * Creates a [FieldReference] that can be used to determine field equality.
  */
 fun FieldInsnNode.asReference(): FieldReference {
     return FieldReference(owner, name, desc)
+}
+
+/**
+ * Creates a [FieldId] that can be used to determine identify a field in a class.
+ */
+fun FieldInsnNode.asId(): FieldId {
+    return FieldId(name, desc)
 }
 
 fun FieldNode.referencedBy(reference: FieldReference): Boolean {
