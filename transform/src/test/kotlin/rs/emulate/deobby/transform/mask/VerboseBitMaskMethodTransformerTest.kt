@@ -1,7 +1,5 @@
 package rs.emulate.deobby.transform.mask
 
-import jdk.internal.org.objectweb.asm.Opcodes.IAND
-import jdk.internal.org.objectweb.asm.Opcodes.LSHL
 import org.junit.jupiter.api.Test
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -20,7 +18,7 @@ class VerboseBitMaskMethodTransformerTest : PureMethodTransformerTest() {
 
     @Test
     fun `transformer doesn't match bitmasks without shifts`() {
-        val expected = arrayOf(0.toPushInstruction(), 1.toPushInstruction(), InsnNode(IAND))
+        val expected = arrayOf(0.toPushInstruction(), 1.toPushInstruction(), InsnNode(Opcodes.IAND))
         val input = expected.copyOf()
 
         assertInstructionEquals(expected, input)
@@ -28,7 +26,7 @@ class VerboseBitMaskMethodTransformerTest : PureMethodTransformerTest() {
 
     @Test
     fun `transformer doesn't match bitshifts without masks`() {
-        val expected = arrayOf(0.toPushInstruction(), 1.toPushInstruction(), InsnNode(LSHL))
+        val expected = arrayOf(0.toPushInstruction(), 1.toPushInstruction(), InsnNode(Opcodes.LSHL))
         val input = expected.copyOf()
 
         assertInstructionEquals(expected, input)
@@ -163,7 +161,7 @@ class VerboseBitMaskMethodTransformerTest : PureMethodTransformerTest() {
         }
 
         private fun AbstractInsnNode.isLongValue(): Boolean {
-            return this is LdcInsnNode && this.isLong()
+            return this is LdcInsnNode && isLong()
         }
 
     }

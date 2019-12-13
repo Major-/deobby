@@ -5,7 +5,7 @@ import org.objectweb.asm.tree.InsnList
 
 class InstructionMatcher(list: InsnList) {
 
-    private val instructions = list.toArray().filter { it.opcode != -1 }
+    private val instructions = list.toArray().filterNot { it.opcode == PSUEDO_INSTRUCTION_OPCODE }
     private val instructionText = instructionsToString()
 
     fun match(pattern: InstructionPattern): List<InstructionMatch> {
@@ -39,6 +39,15 @@ class InstructionMatcher(list: InsnList) {
      */
     private fun instructionsToString(): String {
         return instructions.joinToString(separator = "") { InstructionPattern.opcodeToString(it.opcode) }
+    }
+
+    private companion object {
+
+        /**
+         * The opcode asm uses for pseudo-instructions, like labels
+         */
+        private const val PSUEDO_INSTRUCTION_OPCODE = -1
+        
     }
 
 }

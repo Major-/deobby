@@ -26,7 +26,7 @@ abstract class PureMethodTransformerTest {
 
         transformer.transform(node, context)
 
-        Assertions.assertInstructionEquals(expected, node.instructions)
+        Assertions.assertInstructionEquals(expected.asIterable(), node.instructions)
     }
 
     private fun createMethodNode(name: String, instructions: Array<AbstractInsnNode>): MethodNode {
