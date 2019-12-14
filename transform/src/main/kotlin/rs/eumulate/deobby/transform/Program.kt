@@ -27,8 +27,8 @@ class Program(classes: List<ClassNode>, val context: ProgramContext) {
         // (only produced by very old java compilers).
         for (`class` in classes) {
             for ((index, method) in `class`.methods.withIndex()) {
-                val exceptions = method.exceptions.toTypedArray()
                 val signature = method.signature
+                val exceptions = method.exceptions.toTypedArray()
 
                 val adapter = JSRInlinerAdapter(method, method.access, method.name, method.desc, signature, exceptions)
                 method.accept(adapter)
@@ -119,8 +119,6 @@ class Program(classes: List<ClassNode>, val context: ProgramContext) {
 
     private fun ClassNode.encode(supertypes: Map<String, String>): ByteArray {
         val writer = SupertypeAwareClassWriter(ClassWriter.COMPUTE_FRAMES, supertypes)
-        // TODO need to replace JSR/RET instructions that Java < 1.5 can produce for try/finally,
-        // but are not legal in 1.6+
 
         try {
             accept(CheckClassAdapter(writer, true))

@@ -1,6 +1,7 @@
 package rs.eumulate.deobby.transform
 
 import org.objectweb.asm.tree.MethodNode
+import rs.eumulate.deobby.asm.tree.printableName
 
 /**
  * A [Transformer] that manipulates [MethodNode]s and may have [Program]-wide side-effects.
@@ -39,4 +40,10 @@ abstract class PureMethodTransformer : MethodTransformer {
 
 }
 
-data class MethodContext(val className: String) : TransformerContext
+data class MethodContext(val className: String) : TransformerContext {
+
+    fun printableName(method: MethodNode): String {
+        return "${className}/${method.printableName}"
+    }
+
+}

@@ -2,6 +2,9 @@ package rs.eumulate.deobby.asm.tree
 
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.MethodNode
+import rs.eumulate.deobby.asm.match.InstructionMatch
+import rs.eumulate.deobby.asm.match.InstructionMatcher
+import rs.eumulate.deobby.asm.match.InstructionPattern
 
 val MethodNode.printableName: String
     get() = name + desc
@@ -44,4 +47,9 @@ fun MethodNode.isNative(): Boolean {
  */
 fun MethodNode.hasBytecode(): Boolean {
     return access and (Opcodes.ACC_ABSTRACT or Opcodes.ACC_NATIVE) == 0
+}
+
+fun MethodNode.match(pattern: InstructionPattern): List<InstructionMatch> {
+    val matcher = InstructionMatcher(instructions)
+    return matcher.match(pattern)
 }

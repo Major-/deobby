@@ -4,16 +4,15 @@ import mu.KotlinLogging
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.MethodNode
 import rs.eumulate.deobby.asm.ldc.LongLdcInsnNode
-import rs.eumulate.deobby.asm.match.InstructionMatcher
 import rs.eumulate.deobby.asm.match.InstructionPattern
 import rs.eumulate.deobby.asm.toPushInstruction
 import rs.eumulate.deobby.asm.tree.getNumericPushValue
-import rs.eumulate.deobby.asm.tree.printableName
+import rs.eumulate.deobby.asm.tree.match
 import rs.eumulate.deobby.transform.MethodContext
 import rs.eumulate.deobby.transform.PureMethodTransformer
 
 /**
- * A [PureMethodTransformer] that compacts bitmask operands in expression of the form `a OP b SHIFT c`, where `OP` is
+ * A [PureMethodTransformer] that compacts bitmask operands in expressions of the form `a OP b SHIFT c`, where `OP` is
  * one of `&`, `|`, `^`, and `SHIFT` is one of `<<`, `>>`, `>>>`.
  *
  * Operations may be compacted when the number of bits in the mask operand is greater than the amount of bits remaining
@@ -22,13 +21,10 @@ import rs.eumulate.deobby.transform.PureMethodTransformer
 class VerboseBitMaskMethodTransformer : PureMethodTransformer() {
 
     override fun transform(item: MethodNode, context: MethodContext) {
-        val matcher = InstructionMatcher(item.instructions)
-        val matches = matcher.match(BIT_MASK_SHIFT_PATTERN)
+        val matches = item.match(BIT_MASK_SHIFT_PATTERN)
 
-        for (match in matches) {
-            val (pushMask, _, pushShift, shift) = match
-
-            val mask: Long = pushMask.getNumericPushValue()
+        for ((pushMask, /* bit op */ _, pushShift, shift) in matches) {
+            val mask = pushMask.getNumericPushValue()
             val bits = pushShift.getNumericPushValue().toInt()
 
             item.instructions[pushMask] = if (shift.opcode in LONG_SHIFT_OPCODES) {
@@ -38,9 +34,9 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer() {
                     mask shl bits ushr bits
                 }
 
-                logger.debug { "Simplifying long shift of $mask to $simpleMask in ${context.className}/${item.printableName}" }
+                logger.debug { "Simplifying long shift of $mask to $simpleMask in ${context.printableName(item)}" }
 
-                LongLdcInsnNode(simpleMask) // Must use a LDC with a Long regardless of the mask value if long shift
+                LongLdcInsnNode(simpleMask) // Must use LDC with a Long regardless of the mask value if long shift
             } else {
                 val truncated = mask.toInt()
                 val simpleMask = if (shift.opcode in RIGHT_SHIFT_OPCODES) {
@@ -49,14 +45,14 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer() {
                     truncated shl bits ushr bits
                 }
 
-                logger.debug { "Simplifying int shift of $truncated to $simpleMask in ${context.className}.${item.printableName}" }
+                logger.debug { "Simplifying int shift of $truncated to $simpleMask in ${context.printableName(item)}" }
 
                 simpleMask.toPushInstruction()
             }
         }
 
         if (matches.isNotEmpty()) {
-            logger.info { "Simplified ${matches.size} bitmasks in ${context.className}.${item.printableName}" }
+            logger.info { "Simplified ${matches.size} bitmasks in ${context.printableName(item)}" }
         }
     }
 
@@ -69,8 +65,8 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer() {
 
         private val BIT_MASK_SHIFT_PATTERN = InstructionPattern.compile("$PUSH_NUMBER $BIT_OP $PUSH_NUMBER $SHIFT_OP")
 
-        private val LONG_SHIFT_OPCODES = setOf(Opcodes.LSHL, Opcodes.LSHR, Opcodes.LUSHR)
-        private val RIGHT_SHIFT_OPCODES = setOf(Opcodes.ISHR, Opcodes.IUSHR, Opcodes.LSHR, Opcodes.LUSHR)
+        private val LONG_SHIFT_OPCODES = hashSetOf(Opcodes.LSHL, Opcodes.LSHR, Opcodes.LUSHR)
+        private val RIGHT_SHIFT_OPCODES = hashSetOf(Opcodes.ISHR, Opcodes.IUSHR, Opcodes.LSHR, Opcodes.LUSHR)
     }
 
 }
