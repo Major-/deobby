@@ -5,8 +5,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation "org.slf4j:slf4j-jdk14:$slf4jVersion"
-    implementation "io.github.microutils:kotlin-logging:$kotlinLoggingVersion"
     implementation "com.michael-bull.kotlin-result:kotlin-result:$resultVersion"
+    implementation "com.michael-bull.kotlin-inline-logger:kotlin-inline-logger-jvm:$kotlinInlineLoggerVersion"
 
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"

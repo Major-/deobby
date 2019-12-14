@@ -1,6 +1,6 @@
 package rs.eumulate.deobby.transform.mask
 
-import mu.KotlinLogging
+import com.github.michaelbull.logging.InlineLogger
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.MethodNode
 import rs.eumulate.deobby.asm.ldc.LongLdcInsnNode
@@ -57,7 +57,7 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer() {
     }
 
     private companion object {
-        private val logger = KotlinLogging.logger { }
+        private val logger = InlineLogger()
 
         private const val PUSH_NUMBER = "(ICONST | BIPUSH | SIPUSH | LDC)"
         private const val BIT_OP = "(IAND | IOR | IXOR | LAND | LOR | LXOR)"
