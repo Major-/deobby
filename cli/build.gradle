@@ -1,6 +1,0 @@
-apply from: "$gradleDir/kotlin.gradle"
-
-dependencies {
-    implementation "com.xenomachina:kotlin-argparser:$argparserVersion"
-    implementation "com.moandjiezana.toml:toml4j:$tomljVersion"
-}

@@ -1,7 +1,0 @@
-apply from: "$gradleDir/kotlin.gradle"
-
-dependencies {
-    implementation project(":asm")
-    implementation "org.ow2.asm:asm:$asmVersion"
-    implementation "org.ow2.asm:asm-commons:$asmVersion"
-}
