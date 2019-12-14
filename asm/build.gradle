@@ -1,8 +1,8 @@
 apply from: "$gradleDir/kotlin.gradle"
 
 dependencies {
-    compile "org.ow2.asm:asm:$asmVersion"
-    compile "org.ow2.asm:asm-commons:$asmVersion"
-    compile "org.ow2.asm:asm-util:$asmVersion"
-    compile "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    implementation "org.ow2.asm:asm:$asmVersion"
+    implementation "org.ow2.asm:asm-commons:$asmVersion"
+    implementation "org.ow2.asm:asm-util:$asmVersion"
+    implementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
 }
