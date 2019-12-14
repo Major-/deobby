@@ -5,17 +5,17 @@ package rs.eumulate.deobby.asm.ldc
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.LdcInsnNode
 
-inline fun IntLdcInsnNode(value: Int) = LdcInsnNode(value)
+inline fun IntLdcInsnNode(value: Int): LdcInsnNode = LdcInsnNode(value)
 
-inline fun FloatLdcInsnNode(value: Float) = LdcInsnNode(value)
+inline fun FloatLdcInsnNode(value: Float): LdcInsnNode = LdcInsnNode(value)
 
-inline fun LongLdcInsnNode(value: Long) = LdcInsnNode(value)
+inline fun LongLdcInsnNode(value: Long): LdcInsnNode = LdcInsnNode(value)
 
-inline fun DoubleLdcInsnNode(value: Double) = LdcInsnNode(value)
+inline fun DoubleLdcInsnNode(value: Double): LdcInsnNode = LdcInsnNode(value)
 
-inline fun StringLdcInsnNode(value: String) = LdcInsnNode(value)
+inline fun StringLdcInsnNode(value: String): LdcInsnNode = LdcInsnNode(value)
 
-inline fun TypeLdcInsnNode(value: Type) = LdcInsnNode(value)
+inline fun TypeLdcInsnNode(value: Type): LdcInsnNode = LdcInsnNode(value)
 
 fun LdcInsnNode.isInt(): Boolean = cst is Int
 
