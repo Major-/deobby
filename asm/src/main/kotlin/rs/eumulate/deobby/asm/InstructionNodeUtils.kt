@@ -4,7 +4,8 @@ import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.InsnNode
 import org.objectweb.asm.tree.IntInsnNode
-import org.objectweb.asm.tree.LdcInsnNode
+import rs.eumulate.deobby.asm.ldc.IntLdcInsnNode
+import rs.eumulate.deobby.asm.ldc.LongLdcInsnNode
 
 /**
  * Creates a numeric push instruction.
@@ -20,7 +21,7 @@ fun Int.toPushInstruction(): AbstractInsnNode {
         5 -> InsnNode(ICONST_5)
         in Byte.MIN_VALUE..Byte.MAX_VALUE -> IntInsnNode(BIPUSH, this)
         in Short.MIN_VALUE..Short.MAX_VALUE -> IntInsnNode(SIPUSH, this)
-        else -> LdcInsnNode(this)
+        else -> IntLdcInsnNode(this)
     }
 }
 
@@ -38,7 +39,7 @@ fun Long.toPushInstruction(): AbstractInsnNode {
         5L -> InsnNode(ICONST_5)
         in Byte.MIN_VALUE..Byte.MAX_VALUE -> IntInsnNode(BIPUSH, toInt())
         in Short.MIN_VALUE..Short.MAX_VALUE -> IntInsnNode(SIPUSH, toInt())
-        in Int.MIN_VALUE..Int.MAX_VALUE -> LdcInsnNode(toInt())
-        else -> LdcInsnNode(this)
+        in Int.MIN_VALUE..Int.MAX_VALUE -> IntLdcInsnNode(toInt())
+        else -> LongLdcInsnNode(this)
     }
 }
