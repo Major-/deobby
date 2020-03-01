@@ -7,10 +7,10 @@ import org.objectweb.asm.tree.InsnNode
 import org.objectweb.asm.tree.IntInsnNode
 import org.objectweb.asm.tree.LdcInsnNode
 import rs.emulate.deobby.transform.PureMethodTransformerTest
-import rs.eumulate.deobby.asm.ldc.LongLdcInsnNode
-import rs.eumulate.deobby.asm.ldc.isLong
-import rs.eumulate.deobby.asm.toPushInstruction
-import rs.eumulate.deobby.transform.mask.VerboseBitMaskMethodTransformer
+import rs.emulate.deobby.asm.ldc.LongLdcInsnNode
+import rs.emulate.deobby.asm.ldc.isLong
+import rs.emulate.deobby.asm.toPushInstruction
+import rs.emulate.deobby.transform.mask.VerboseBitMaskMethodTransformer
 
 class VerboseBitMaskMethodTransformerTest : PureMethodTransformerTest() {
 
@@ -75,7 +75,9 @@ class VerboseBitMaskMethodTransformerTest : PureMethodTransformerTest() {
 
     @Test
     fun `transformer removes unnecessary bits in left long shift`() {
-        val expected = expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(0b1111), "<<", 60.toPushInstruction())
+        val expected = expression(
+            LongLdcInsnNode(0), "&",
+            LongLdcInsnNode(0b1111), "<<", 60.toPushInstruction())
         val input = expression(LongLdcInsnNode(0), "&", LdcInsnNode(Long.MAX_VALUE), "<<", 60.toPushInstruction())
 
         assertInstructionEquals(expected, input)
@@ -91,8 +93,12 @@ class VerboseBitMaskMethodTransformerTest : PureMethodTransformerTest() {
 
     @Test
     fun `transformer removes unnecessary bits in right long shift`() {
-        val expected = expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(0b1000), ">>", 3.toPushInstruction())
-        val input = expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(0b1011), ">>", 3.toPushInstruction())
+        val expected = expression(
+            LongLdcInsnNode(0), "&",
+            LongLdcInsnNode(0b1000), ">>", 3.toPushInstruction())
+        val input = expression(
+            LongLdcInsnNode(0), "&",
+            LongLdcInsnNode(0b1011), ">>", 3.toPushInstruction())
 
         assertInstructionEquals(expected, input)
     }
@@ -107,8 +113,12 @@ class VerboseBitMaskMethodTransformerTest : PureMethodTransformerTest() {
 
     @Test
     fun `transformer removes unnecessary bits in unsigned right long shift`() {
-        val expected = expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(1L shl 62), ">>>", 62.toPushInstruction())
-        val input = expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(Long.MAX_VALUE), ">>>", 62.toPushInstruction())
+        val expected = expression(
+            LongLdcInsnNode(0), "&",
+            LongLdcInsnNode(1L shl 62), ">>>", 62.toPushInstruction())
+        val input = expression(
+            LongLdcInsnNode(0), "&",
+            LongLdcInsnNode(Long.MAX_VALUE), ">>>", 62.toPushInstruction())
 
         assertInstructionEquals(expected, input)
     }
@@ -116,10 +126,14 @@ class VerboseBitMaskMethodTransformerTest : PureMethodTransformerTest() {
     @Test
     fun `transformer rewrites multiple bitmasks in one method`() {
         val expected = expression(0.toPushInstruction(), "&", 0b111.toPushInstruction(), "<<", 29.toPushInstruction()) +
-            expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(1L shl 62), ">>>", 62.toPushInstruction())
+            expression(
+                LongLdcInsnNode(0), "&",
+                LongLdcInsnNode(1L shl 62), ">>>", 62.toPushInstruction())
 
         val input = expression(0.toPushInstruction(), "&", 0b1111.toPushInstruction(), "<<", 29.toPushInstruction()) +
-            expression(LongLdcInsnNode(0), "&", LongLdcInsnNode(Long.MAX_VALUE), ">>>", 62.toPushInstruction())
+            expression(
+                LongLdcInsnNode(0), "&",
+                LongLdcInsnNode(Long.MAX_VALUE), ">>>", 62.toPushInstruction())
 
         assertInstructionEquals(expected, input)
     }

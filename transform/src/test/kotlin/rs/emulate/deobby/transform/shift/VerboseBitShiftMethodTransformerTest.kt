@@ -7,10 +7,10 @@ import org.objectweb.asm.tree.InsnNode
 import org.objectweb.asm.tree.IntInsnNode
 import org.objectweb.asm.tree.LdcInsnNode
 import rs.emulate.deobby.transform.PureMethodTransformerTest
-import rs.eumulate.deobby.asm.ldc.LongLdcInsnNode
-import rs.eumulate.deobby.asm.ldc.isLong
-import rs.eumulate.deobby.asm.toPushInstruction
-import rs.eumulate.deobby.transform.shift.VerboseBitShiftMethodTransformer
+import rs.emulate.deobby.asm.ldc.LongLdcInsnNode
+import rs.emulate.deobby.asm.ldc.isLong
+import rs.emulate.deobby.asm.toPushInstruction
+import rs.emulate.deobby.transform.shift.VerboseBitShiftMethodTransformer
 
 class VerboseBitShiftMethodTransformerTest : PureMethodTransformerTest() {
 

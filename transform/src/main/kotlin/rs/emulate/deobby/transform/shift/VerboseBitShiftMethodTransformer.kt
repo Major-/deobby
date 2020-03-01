@@ -1,0 +1,62 @@
+package rs.emulate.deobby.transform.shift
+
+import com.github.michaelbull.logging.InlineLogger
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.tree.MethodNode
+import rs.emulate.deobby.asm.match.InstructionPattern
+import rs.emulate.deobby.asm.toPushInstruction
+import rs.emulate.deobby.asm.tree.getNumericPushValue
+import rs.emulate.deobby.asm.tree.match
+import rs.emulate.deobby.asm.tree.printableName
+import rs.emulate.deobby.transform.MethodContext
+import rs.emulate.deobby.transform.PureMethodTransformer
+
+/**
+ * A [PureMethodTransformer] that compacts bitshift operands by removing superfluous bits.
+ *
+ * The Java Language Specification require JVMs utilise only the lower 5 bits for an integer shift (6 bits for a long
+ * shift), although the given operand may be any 32-bit value. This transformer strips the upper 27 (or 26) bits.
+ *
+ * ```
+ * assertEquals(2 << 0b00000001, 2 << 0b1111111101000001)
+ * ```
+ */
+class VerboseBitShiftMethodTransformer : PureMethodTransformer() {
+
+    override fun transform(item: MethodNode, context: MethodContext) {
+        val matches = item.match(BIT_SHIFT_PATTERN)
+        var simplified = 0
+
+        for (match in matches) {
+            val (push, shift) = match
+            val bits = push.getNumericPushValue()
+
+            val max = if (shift.opcode in LONG_SHIFT_OPCODES) Long.SIZE_BITS else Int.SIZE_BITS
+            if (bits in 0 until max) {
+                continue
+            }
+
+            val constrained = bits.toInt() and (max - 1)
+            item.instructions[push] = constrained.toPushInstruction()
+
+            simplified++
+            logger.trace { "Simplifying shift from $bits to $constrained in ${context.className}.${item.printableName}" }
+        }
+
+        if (simplified > 0) {
+            logger.debug { "Simplified $simplified bitshifts in ${context.className}.${item.printableName}" }
+        }
+    }
+
+    private companion object {
+        private val logger = InlineLogger()
+
+        private const val PUSH_NUMBER = "(ICONST | BIPUSH | SIPUSH | LDC)"
+        private const val SHIFT_OP = "(ISHL | ISHR | IUSHR | LSHL | LSHR | LUSHR)"
+
+        private val BIT_SHIFT_PATTERN = InstructionPattern.compile("$PUSH_NUMBER $SHIFT_OP")
+
+        private val LONG_SHIFT_OPCODES = hashSetOf(Opcodes.LSHL, Opcodes.LSHR, Opcodes.LUSHR)
+    }
+
+}

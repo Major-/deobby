@@ -3,9 +3,9 @@ package rs.emulate.deobby.transform
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.InsnList
 import org.objectweb.asm.tree.MethodNode
-import rs.eumulate.deobby.asm.wrapper.Assertions
-import rs.eumulate.deobby.transform.MethodContext
-import rs.eumulate.deobby.transform.PureMethodTransformer
+import rs.emulate.deobby.asm.wrapper.Assertions
+import rs.emulate.deobby.transform.MethodContext
+import rs.emulate.deobby.transform.PureMethodTransformer
 
 abstract class PureMethodTransformerTest {
 
