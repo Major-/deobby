@@ -14,6 +14,8 @@ class TransformerSet( // TODO need more control over the transformer order than 
     override fun transform(item: Program, context: ProgramContext) {
         programTransformers.forEach { it.transform(item, context) }
 
+        classTransformers.forEach { it.initialise(item) }
+
         methodTransformers.forEach { it.initialise(item) }
 
         for (clazz in item.classes()) {
