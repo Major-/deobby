@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     base
+    `maven-publish`
     id("com.github.ben-manes.versions") version "0.27.0"
 
     kotlin("jvm") version "1.3.61" apply false
@@ -26,10 +27,34 @@ tasks.withType<DependencyUpdatesTask> {
 }
 
 subprojects {
+    apply(plugin = "maven-publish")
+    apply(plugin = "java")
+
     plugins.withType<JavaPlugin> {
         tasks.withType<Test> {
             failFast = true
             useJUnitPlatform()
+        }
+    }
+
+    plugins.withType<PublishingPlugin> {
+        configure<PublishingExtension >{
+            (publications) {
+                create<MavenPublication>("mavenJava") {
+                    from(components["java"])
+                }
+            }
+
+            repositories {
+                maven {
+                    name = "github-packages"
+                    url = uri("https://maven.pkg.github.com/Major-/deobby")
+                    credentials {
+                        username = System.getenv("GITHUB_ACTOR")
+                        password = System.getenv("GITHUB_TOKEN")
+                    }
+                }
+            }
         }
     }
 
