@@ -26,11 +26,7 @@ class DeadMethodRemoval : ClassTransformer {
                 val matcher = InstructionMatcher(method.instructions)
                 val matches = matcher.match(INVOKE_PATTERN)
 
-                val caller = MethodReference(
-                    clazz.name,
-                    method.name,
-                    method.desc
-                )
+                val caller = MethodReference(clazz.name, method.name, method.desc)
                 calls.putIfAbsent(caller, ArrayList(2))
 
                 for (match in matches) {
@@ -43,19 +39,15 @@ class DeadMethodRemoval : ClassTransformer {
         }
 
         for (item in program.classes()) {
-            val parentMethods = findParentFunctions(program, item.name)
+            val parentMethods = findParentFunctions(program, item.name) ?: continue
 
             val iterator = item.methods.listIterator()
             for (method in iterator) {
-                if (retain(method) || Pair(method.name, method.desc) in parentMethods) {
+                if (!method.isStatic() && Pair(method.name, method.desc) in parentMethods || retain(method)) {
                     continue
                 }
 
-                val current = MethodReference(
-                    item.name,
-                    method.name,
-                    method.desc
-                )
+                val current = MethodReference(item.name, method.name, method.desc)
                 val currentCalls = checkNotNull(calls[current]) { "Found a function not in the call graph: $current" }
 
                 // function can be unused if it's either never called, or only called by itself
@@ -71,8 +63,7 @@ class DeadMethodRemoval : ClassTransformer {
         val iterator = item.methods.listIterator()
 
         for (method in iterator) {
-            val current =
-                MethodReference(item.name, method.name, method.desc)
+            val current = MethodReference(item.name, method.name, method.desc)
 
             if (current in removals) {
                 logger.trace { "Removing unused function $current" }
@@ -100,17 +91,22 @@ class DeadMethodRemoval : ClassTransformer {
         return false
     }
 
-    private fun findParentFunctions(program: Program, name: String): Set<Pair<String, String>> {
-        return findSupertypes(program, name).flatMapTo(mutableSetOf<Pair<String, String>>()) { type ->
+    /**
+     * Finds the names and descriptors of every method in every parent function, returning `null` if a supertype could
+     * not be loaded (i.e. was not on the system classpath).
+     */
+    private fun findParentFunctions(program: Program, className: String): Set<Pair<String, String>>? {
+        return findSupertypes(program, className).flatMapTo(mutableSetOf<Pair<String, String>>()) { type ->
             when (type) {
                 is SuperType.JdkClass -> type.clazz.methods.map { it.name to Type.getMethodDescriptor(it) }
                 is SuperType.Node -> type.node.methods.map { it.name to it.desc }
+                is SuperType.NotAvailable -> return null
             }
         }
     }
 
     // TODO move this elsewhere (and share it between transformers)
-    private fun findSupertypes(program: Program, name: String): Set<SuperType> {
+    private fun findSupertypes(program: Program, className: String): Set<SuperType> {
         fun findSupertypes(
             program: Program,
             name: String,
@@ -127,28 +123,18 @@ class DeadMethodRemoval : ClassTransformer {
                 val node = program[name]
                 val superName = node.superName
 
-                types += SuperType.from(
-                    superName,
-                    program
-                )
+                types += SuperType.from(superName, program)
                 findSupertypes(program, superName, types, visited)
 
-                types += node.interfaces.map {
-                    SuperType.from(
-                        it,
-                        program
-                    )
-                }
+                types += node.interfaces.map { SuperType.from(it, program) }
                 for (interfaceName in node.interfaces) {
                     findSupertypes(program, interfaceName, types, visited)
                 }
             } else {
-                val clazz = load(name)
+                val clazz = load(name) ?: return types // bail out if we couldn't load the class
 
                 val superclass = clazz.superclass ?: return types
-                types += SuperType.JdkClass(
-                    superclass
-                )
+                types += SuperType.JdkClass(superclass)
                 types += clazz.interfaces.map(SuperType::JdkClass)
 
                 findSupertypes(program, superclass.name.replace('.', '/'), types, visited)
@@ -161,21 +147,24 @@ class DeadMethodRemoval : ClassTransformer {
             return types
         }
 
-        return findSupertypes(program, name, mutableSetOf(), mutableSetOf())
+        return findSupertypes(program, className, mutableSetOf(), mutableSetOf())
     }
 
     private sealed class SuperType {
         data class Node(val node: ClassNode) : SuperType()
         data class JdkClass(val clazz: Class<*>) : SuperType()
 
+        /**
+         * The class with the specified [name] is not present on the classpath.
+         */
+        data class NotAvailable(val name: String) : SuperType()
+
         companion object {
             fun from(name: String, program: Program): SuperType {
                 return if (name in program) {
                     Node(program[name])
                 } else {
-                    JdkClass(
-                        load(name)
-                    )
+                    load(name)?.let(::JdkClass) ?: NotAvailable(name)
                 }
             }
         }
@@ -194,9 +183,15 @@ class DeadMethodRemoval : ClassTransformer {
 
         private const val STATIC_INITIALIZER_NAME = "<clinit>"
 
-        private fun load(name: String): Class<*> { // TODO do something other than exploding on failure
+        private fun load(name: String): Class<*>? {
             val javaName = name.replace('/', '.')
-            return ClassLoader.getSystemClassLoader().loadClass(javaName)
+
+            return try {
+                ClassLoader.getSystemClassLoader().loadClass(javaName)
+            } catch (e: ClassNotFoundException) {
+                logger.warn(e) { "Referenced type $name could not be found on the system classpath." }
+                null
+            }
         }
 
     }
