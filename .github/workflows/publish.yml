@@ -35,5 +35,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NEW_VERSION=${GITHUB_REF##*/}
-          ./gradlew -Pversion=${NEW_VERSION} publish
+          ./gradlew -Pversion=${NEW_VERSION} -Pbintray.repository=releases publish
         if: github.event_name == 'release'

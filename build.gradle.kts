@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     base
     `maven-publish`
+    id("com.jfrog.bintray") version "1.8.4" apply(false)
     id("com.github.ben-manes.versions") version "0.27.0"
 
     kotlin("jvm") version "1.3.61" apply false
@@ -29,6 +30,7 @@ tasks.withType<DependencyUpdatesTask> {
 subprojects {
     apply(plugin = "maven-publish")
     apply(plugin = "java")
+    apply(plugin = "com.jfrog.bintray")
 
     plugins.withType<JavaPlugin> {
         tasks.withType<Test> {
@@ -37,22 +39,33 @@ subprojects {
         }
     }
 
+    plugins.withType<com.jfrog.bintray.gradle.BintrayPlugin> {
+        configure<com.jfrog.bintray.gradle.BintrayExtension> {
+            user = System.getenv("BINTRAY_USER")
+            key = System.getenv("BINTRAY_KEY")
+            publish = true
+            setPublications("mavenJava")
+
+            pkg(delegateClosureOf<com.jfrog.bintray.gradle.BintrayExtension.PackageConfig> {
+                name = "deobby"
+                userOrg = "apollo-rsps"
+                desc = description
+                repo = property("bintray.repository") as String
+
+                setLicenses("ISC")
+            })
+        }
+    }
+
     plugins.withType<PublishingPlugin> {
         configure<PublishingExtension >{
             (publications) {
                 create<MavenPublication>("mavenJava") {
                     from(components["java"])
-                }
-            }
 
-            repositories {
-                maven {
-                    name = "github-packages"
-                    url = uri("https://maven.pkg.github.com/Major-/deobby")
-                    credentials {
-                        username = System.getenv("GITHUB_ACTOR")
-                        password = System.getenv("GITHUB_TOKEN")
-                    }
+                    groupId = project.group as String
+                    artifactId = project.name
+                    version = project.version as String
                 }
             }
         }
