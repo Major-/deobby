@@ -8,7 +8,6 @@ import rs.emulate.deobby.asm.match.InstructionPattern
 import rs.emulate.deobby.asm.toPushInstruction
 import rs.emulate.deobby.asm.tree.getNumericPushValue
 import rs.emulate.deobby.asm.tree.match
-import rs.emulate.deobby.asm.tree.printableName
 import rs.emulate.deobby.transform.MethodContext
 import rs.emulate.deobby.transform.PureMethodTransformer
 
@@ -36,7 +35,7 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer() {
                 }
 
                 logger.trace {
-                    "Simplifying long shift of $mask to $simpleMask in ${context.className}/${item.printableName}"
+                    "Simplifying long shift of $mask to $simpleMask in ${context.printableName(item)}"
                 }
 
                 LongLdcInsnNode(simpleMask) // Must use LDC with a Long regardless of the mask value if long shift
@@ -49,7 +48,7 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer() {
                 }
 
                 logger.trace {
-                    "Simplifying int shift of $truncated to $simpleMask in ${context.className}.${item.printableName}"
+                    "Simplifying int shift of $truncated to $simpleMask in ${context.printableName(item)}"
                 }
 
                 simpleMask.toPushInstruction()
@@ -57,7 +56,7 @@ class VerboseBitMaskMethodTransformer : PureMethodTransformer() {
         }
 
         if (matches.isNotEmpty()) {
-            logger.debug { "Simplified ${matches.size} bitmasks in ${context.className}.${item.printableName}" }
+            logger.debug { "Simplified ${matches.size} bitmasks in ${context.printableName(item)}" }
         }
     }
 

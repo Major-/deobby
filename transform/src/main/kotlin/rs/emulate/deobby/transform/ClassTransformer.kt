@@ -5,8 +5,7 @@ import org.objectweb.asm.tree.ClassNode
 /**
  * A [Transformer] that manipulates [ClassNode]s and may have [Program]-wide side-effects.
  */
-interface ClassTransformer :
-    Transformer<ClassNode, ClassContext> {
+interface ClassTransformer : Transformer<ClassNode, ClassContext> {
 
     /**
      * Initialise this [ClassTransformer] using information from the specified [Program].

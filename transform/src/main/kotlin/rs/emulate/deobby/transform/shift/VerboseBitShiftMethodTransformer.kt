@@ -7,7 +7,6 @@ import rs.emulate.deobby.asm.match.InstructionPattern
 import rs.emulate.deobby.asm.toPushInstruction
 import rs.emulate.deobby.asm.tree.getNumericPushValue
 import rs.emulate.deobby.asm.tree.match
-import rs.emulate.deobby.asm.tree.printableName
 import rs.emulate.deobby.transform.MethodContext
 import rs.emulate.deobby.transform.PureMethodTransformer
 
@@ -40,11 +39,11 @@ class VerboseBitShiftMethodTransformer : PureMethodTransformer() {
             item.instructions[push] = constrained.toPushInstruction()
 
             simplified++
-            logger.trace { "Simplifying shift from $bits to $constrained in ${context.className}.${item.printableName}" }
+            logger.trace { "Simplifying shift from $bits to $constrained in ${context.printableName(item)}" }
         }
 
         if (simplified > 0) {
-            logger.debug { "Simplified $simplified bitshifts in ${context.className}.${item.printableName}" }
+            logger.debug { "Simplified $simplified bitshifts in ${context.printableName(item)}" }
         }
     }
 

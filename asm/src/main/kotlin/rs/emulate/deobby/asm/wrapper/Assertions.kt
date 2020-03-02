@@ -16,10 +16,7 @@ object Assertions {
             val left = expectedList[index]
             val right = actualList[index]
 
-            assertInstructionEquals(
-                left,
-                right
-            ) { "index=$index" }
+            assertInstructionEquals(left, right) { "index=$index" }
         }
     }
 

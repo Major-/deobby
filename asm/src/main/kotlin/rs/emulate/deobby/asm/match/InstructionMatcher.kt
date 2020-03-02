@@ -39,9 +39,7 @@ class InstructionMatcher(list: InsnList) {
      */
     private fun instructionsToString(): String {
         return instructions.joinToString(separator = "") {
-            InstructionPattern.opcodeToString(
-                it.opcode
-            )
+            InstructionPattern.opcodeToString(it.opcode)
         }
     }
 

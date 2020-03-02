@@ -118,8 +118,7 @@ class Program(classes: List<ClassNode>, val context: ProgramContext) {
     }
 
     private fun ClassNode.encode(supertypes: Map<String, String>): ByteArray {
-        val writer =
-            SupertypeAwareClassWriter(ClassWriter.COMPUTE_FRAMES, supertypes)
+        val writer = SupertypeAwareClassWriter(ClassWriter.COMPUTE_FRAMES, supertypes)
 
         try {
             accept(CheckClassAdapter(writer, true))
@@ -149,19 +148,12 @@ class Program(classes: List<ClassNode>, val context: ProgramContext) {
 
         fun from(path: Path): Program {
             val classes = when {
-                ZIP_MATCHER.matches(path) -> readZip(
-                    path
-                )
-                path.toString().endsWith(".class") -> readClass(
-                    path
-                )
+                ZIP_MATCHER.matches(path) -> readZip(path)
+                path.toString().endsWith(".class") -> readClass(path)
                 else -> throw IllegalArgumentException("Unrecognised file type `$path`.")
             }
 
-            return Program(
-                classes,
-                ProgramContext(path)
-            )
+            return Program(classes, ProgramContext(path))
         }
 
         private fun readClass(path: Path): List<ClassNode> {
@@ -169,9 +161,7 @@ class Program(classes: List<ClassNode>, val context: ProgramContext) {
 
             BufferedInputStream(Files.newInputStream(path), size).use { input ->
                 val node = ClassNode().also {
-                    ClassReader(input).accept(it,
-                        CLASS_PARSING_OPTIONS
-                    )
+                    ClassReader(input).accept(it, CLASS_PARSING_OPTIONS)
                 }
 
                 return listOf(node)
@@ -185,9 +175,7 @@ class Program(classes: List<ClassNode>, val context: ProgramContext) {
                     .map { entry ->
                         file.getInputStream(entry).use { input ->
                             ClassNode().also {
-                                ClassReader(input).accept(it,
-                                    CLASS_PARSING_OPTIONS
-                                )
+                                ClassReader(input).accept(it, CLASS_PARSING_OPTIONS)
                             }
                         }
                     }

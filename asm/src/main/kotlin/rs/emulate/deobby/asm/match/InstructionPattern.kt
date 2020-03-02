@@ -28,11 +28,7 @@ inline class InstructionPattern(val pattern: Pattern) {
                     name.append(character)
                 } else {
                     if (name.isNotEmpty()) {
-                        regex.append(
-                            instructionToString(
-                                name.toString()
-                            )
-                        )
+                        regex.append(instructionToString(name.toString()))
                         name.clear()
                     }
 
@@ -43,11 +39,7 @@ inline class InstructionPattern(val pattern: Pattern) {
             }
 
             if (name.isNotEmpty()) {
-                regex.append(
-                    instructionToString(
-                        name.toString()
-                    )
-                )
+                regex.append(instructionToString(name.toString()))
             }
 
             val pattern = Pattern.compile(regex.toString())
@@ -135,7 +127,7 @@ inline class InstructionPattern(val pattern: Pattern) {
             )
         )
 
-        private val opcodeMapping = Printer.OPCODES.withIndex().associateBy({ it.value }) { it.index }
+        private val opcodeMapping = Printer.OPCODES.withIndex().associateBy({ it.value }, { it.index })
 
         /**
          * Converts an instruction to a string, used to build the regular expression.
@@ -146,11 +138,7 @@ inline class InstructionPattern(val pattern: Pattern) {
             val lowercased = name.toLowerCase()
 
             return when {
-                uppercased in opcodeMapping -> opcodeToString(
-                    opcodeMapping.getValue(
-                        uppercased
-                    )
-                )
+                uppercased in opcodeMapping -> opcodeToString(opcodeMapping.getValue(uppercased))
                 lowercased in groups -> groups[lowercased]!!.joinToString(
                     separator = "|",
                     prefix = "(",
