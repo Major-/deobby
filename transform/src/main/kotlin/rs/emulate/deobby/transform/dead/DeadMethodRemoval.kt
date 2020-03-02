@@ -7,6 +7,7 @@ import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
 import rs.emulate.deobby.asm.match.InstructionMatcher
 import rs.emulate.deobby.asm.match.InstructionPattern
+import rs.emulate.deobby.asm.tree.isNative
 import rs.emulate.deobby.asm.tree.isStatic
 import rs.emulate.deobby.asm.wrapper.MethodReference
 import rs.emulate.deobby.asm.wrapper.asReference
@@ -23,6 +24,10 @@ class DeadMethodRemoval : ClassTransformer {
 
         for (clazz in program.classes()) {
             for (method in clazz.methods) {
+                if (method.isNative()) {
+                    continue
+                }
+
                 val matcher = InstructionMatcher(method.instructions)
                 val matches = matcher.match(INVOKE_PATTERN)
 
@@ -43,7 +48,9 @@ class DeadMethodRemoval : ClassTransformer {
 
             val iterator = item.methods.listIterator()
             for (method in iterator) {
-                if (!method.isStatic() && Pair(method.name, method.desc) in parentMethods || retain(method)) {
+                if (method.isNative()) {
+                    continue
+                } else if (!method.isStatic() && Pair(method.name, method.desc) in parentMethods || retain(method)) {
                     continue
                 }
 
@@ -63,6 +70,10 @@ class DeadMethodRemoval : ClassTransformer {
         val iterator = item.methods.listIterator()
 
         for (method in iterator) {
+            if (method.isNative()) {
+                continue
+            }
+
             val current = MethodReference(item.name, method.name, method.desc)
 
             if (current in removals) {
@@ -72,7 +83,9 @@ class DeadMethodRemoval : ClassTransformer {
             }
         }
 
-        logger.debug { "Removed $removed unused methods (out of ${removed + item.methods.size}) from ${item.name}" }
+        if (removed > 0) {
+            logger.debug { "Removed $removed unused methods (out of ${removed + item.methods.size}) from ${item.name}" }
+        }
     }
 
     /**
