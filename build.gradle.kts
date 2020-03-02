@@ -15,7 +15,6 @@ allprojects {
     repositories {
         mavenCentral()
         jcenter()
-        maven(url = "https://dl.bintray.com/michaelbull/maven")
     }
 }
 
@@ -78,8 +77,8 @@ subprojects {
         dependencies {
             implementation(kotlin("stdlib-jdk8"))
             implementation(enforcedPlatform("org.junit:junit-bom:5.5.2"))
-            implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger-jvm:1.0.0")
-            implementation("com.michael-bull.kotlin-result:kotlin-result:1.1.3")
+            implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger-jvm:1.0.+")
+            implementation("com.michael-bull.kotlin-result:kotlin-result:1.1.+")
 
             testImplementation(enforcedPlatform("org.junit:junit-bom:5.5.2"))
             testImplementation("org.junit.jupiter:junit-jupiter")
